@@ -1,5 +1,6 @@
 # Changelog — SYNAPSE
 
+- **2026-09-14 · `a851ba5` · fix** — fix(atlas): layout mobile em flexbox (sem área morta), ResizeObserver no body, deg default 0 (search sem undefined) ([análise](entries/2026-09-14-a851ba5.md))
 - **2026-09-14 · `c9e0227` · feat** — feat(automation): atlas auto-regenerado a cada commit e incluído no auto-commit do SYNAPSE ([análise](entries/2026-09-14-c9e0227.md))
 - **2026-09-14 · `5c8c675` · feat** — feat(atlas+skill): Atlas visual do brain (grafo Obsidian-style, Fluxo SYNAPSE, timeline) + skill nexo-workflow — contrato eterno do agente ([análise](entries/2026-09-14-5c8c675.md))
 - **2026-09-14 · `bd2daf9` · fix** — fix(automation): contrato IA por env vars — Git Bash corrompia caminhos Windows passados como argumento (MSYS path conversion) ([análise](entries/2026-09-14-bd2daf9.md))
