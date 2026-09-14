@@ -7,7 +7,8 @@ RUN cd atlas && npm ci && node generate.mjs && npm run build
 FROM node:24-alpine
 WORKDIR /app
 COPY --from=build /app ./
-RUN rm -rf atlas/node_modules
+# runtime: apenas deps de produção (fastify etc.) — devDeps (vite/ts) ficam de fora
+RUN cd atlas && npm ci --omit=dev && rm -rf /root/.npm
 ENV PORT=4321
 EXPOSE 4321
 CMD ["node", "atlas/server.mjs"]

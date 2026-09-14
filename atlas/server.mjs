@@ -15,6 +15,7 @@ import { spawnSync } from 'node:child_process';
 import { ATLAS_DIR, REPO_ROOT, loadAtlas, buildGraph, searchAtlas } from './lib/atlas-data.mjs';
 
 const PORT = Number(process.env.PORT || 4321);
+const HOST = process.env.HOST || '127.0.0.1';
 const TOKEN = process.env.BRAIN_API_TOKEN || null;
 const DIST = join(ATLAS_DIR, 'dist');
 

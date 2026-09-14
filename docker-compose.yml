@@ -3,6 +3,8 @@ services:
     build: .
     container_name: nexo-brain
     restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
     ports:
       - "127.0.0.1:4321:4321"
     env_file: .env
