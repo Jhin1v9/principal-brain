@@ -4,28 +4,31 @@ _Atualizado automaticamente pelo SYNAPSE em 2026-09-14_
 
 ## Entregues
 
-- **2026-09-14 · a851ba5 · fix(atlas)** — Layout mobile do Atlas refeito em flexbox (body column, `main` com `flex: 1; min-height: 0`), eliminando a área morta causada pelos `calc()` de altura; `deg` com default `0` na leitura dos nodes e `ResizeObserver` no body acionando re-render do canvas.
-- **2026-09-14 · c9e0227 · feat(automation)** — `synapse.sh` passa a regenerar o Atlas pós-commit (`node atlas/generate.mjs`, condicional e não fatal) e inclui `atlas/data.js` no auto-commit de artefatos quando existente.
-- **2026-09-14 · 5c8c675 · feat(atlas + skill)** — Introdução do Atlas: painel estático autocontido com grafo canvas (física própria, filtros, busca, pan/zoom/pinch), renderizador markdown, fluxo SYNAPSE e timeline; `generate.mjs` emite `data.js` a partir do vault; nova skill `nexo-workflow` formaliza o contrato operacional do agente.
-- **2026-09-14 · bd2daf9 · fix(automation)** — Contrato por env vars: `synapse.sh` exporta `SYNAPSE_REPO`, `SYNAPSE_COMMIT_JSON`, `SYNAPSE_HASH`, `SYNAPSE_ENTRIES_ABS` e `SYNAPSE_REPORT_ABS` em vez de concatenar caminhos Windows no `-p` do agente, eliminando a corrupção de paths pela conversão MSYS do Git Bash; prompts atualizados.
-- **2026-09-14 · a3742de · feat(automation)** — Criação do SYNAPSE: hook post-commit assíncrono, orquestrador `synapse.sh` com fallback determinístico, guard de idempotência, lock de concorrência, instaladores bash/PowerShell e esqueleto de changelog e relatórios.
+- **2026-09-14 · 13640bb · feat(atlas)** — Reescrita completa do Atlas ("Atlas 2.0"): frontend vanilla `app.js` (827 linhas) substituído por React 18 + TS + Vite + Tailwind 4 (framer-motion, lucide, command palette, views Grafo/Fluxo/Timeline; `graph/engine.ts` com 566 linhas). Novos `server.mjs` (Fastify: API de leitura + escritas com Bearer token e defesa de path traversal) e `mcp-server.mjs` (7 tools MCP via stdio). Breaking: `atlas/data.js` migrou para `atlas/public/data.js` e o frontend passa a exigir `npm run build`.
+- **2026-09-14 · 5c8c675 · feat(atlas + skill)** — Atlas 1.0: painel estático autocontido (grafo canvas com física própria, renderizador markdown, busca, pan/zoom) + `generate.mjs` (284 linhas) gerando `data.js` versionado a partir do vault; cria a skill operacional `nexo-workflow/SKILL.md`.
+- **2026-09-14 · a851ba5 · fix(atlas)** — Correções de layout mobile (flexbox no lugar de `calc()`) e estabilidade: default de `n.deg`, `ResizeObserver` no body, proteção `deg || 0` na busca.
+- **2026-09-14 · c9e0227 · feat(automation)** — `synapse.sh` passa a regenerar o Atlas (`node atlas/generate.mjs`) após cada commit quando aplicável (não fatal) e inclui `atlas/data.js` no auto-commit quando presente.
+- **2026-09-14 · bd2daf9 · fix(automation)** — Contrato dos agentes migrado de argumentos `-p` (corrompidos pela conversão MSYS do Git Bash) para variáveis de ambiente `SYNAPSE_*`; prompts atualizados.
+- **2026-09-14 · a3742de · feat(automation)** — Introdução do SYNAPSE: hook post-commit assíncrono, orquestrador `synapse.sh` com classificação por IA + fallback determinístico, idempotência, lock de concorrência, instaladores bash/PowerShell, esqueleto de changelog e relatório.
 
 ## Em andamento
 
-- Refinamento contínuo do Atlas em mobile: validação manual de 2–3 larguras de tela pendente para confirmar ausência de dependentes do `height` removido do media query antigo (a851ba5).
-- Validação em execução real do agente de relatório (agente 2) sob o novo contrato por env vars, pois ele é não-fatal e falhas silenciosas podem passar despercebidas (bd2daf9).
+- Validação operacional do Atlas 2.0 (build, três views, API Fastify e tools MCP) — recomendado explicitamente na entrada 13640bb; sem evidência de execução ainda.
+- Cobertura de testes: nenhuma das entradas evidencia testes automatizados para os novos servidores (`server.mjs`, `mcp-server.mjs`) nem fumaça para o pipeline SYNAPSE.
 
 ## Próximos passos
 
-- Verificar manualmente o Atlas em 2–3 larguras de tela mobile (a851ba5).
-- Centralizar o default de `deg` na geração de `ATLAS_DATA` (`atlas/generate.mjs`) em vez de no cliente, removendo a dupla defesa `deg || 0` (a851ba5).
-- Adicionar log com tempo de execução da regeneração do Atlas para detectar commits lentos conforme o grafo cresce; avaliar regeneração incremental se o Atlas escalar (c9e0227).
-- Referenciar o Atlas como fonte visual de navegação no `AGENTS.md` do brain (5c8c675).
-- Validar no início de `synapse.sh` a presença das env vars esperadas no ambiente do agente, facilitando diagnóstico (bd2daf9).
+- Rodar `npm run build` e validar as views Grafo/Fluxo/Timeline antes de apontar usuários ao novo Atlas (13640bb).
+- Configurar `BRAIN_API_TOKEN` no ambiente do servidor para habilitar escritas autenticadas (13640bb).
+- Adicionar teste mínimo de fumaça para `server.mjs` (health + search) e para as 5 tools de leitura do MCP (13640bb).
+- Agendar/confirmar regeneração do grafo do Atlas sempre que o vault mudar — hoje atrelada ao SYNAPSE (5c8c675, c9e0227).
+- Verificar manualmente o Atlas em 2–3 larguras mobile e considerar centralizar o default de `deg` na geração em vez do cliente (a851ba5).
+- Validar em execução real a geração de relatório com o contrato por env vars (bd2daf9).
+- Adicionar log de tempo da regeneração do Atlas e avaliar regeneração incremental conforme o grafo cresce (c9e0227).
 
 ## Notas técnicas
 
-- Nenhuma breaking change nas entregas do ciclo; riscos de regressão avaliados como baixos em todos os commits.
-- Ponto de atenção: `core.hooksPath=automation/hooks` desativa hooks padrão de `.git/hooks` — confirmar que não existiam hooks personalizados prévios antes de instalar em outros repos (a3742de).
-- `atlas/data.js` é versionado e depende de regeneração (`node atlas/generate.mjs`) quando o vault muda; risco de grafo desatualizado, não de quebra (5c8c675, mitigado por c9e0227).
-- Repo não possui suíte de testes; a confiança nos diffs vem de inspeção, não de validação automatizada.
+- **Breaking change ativo (13640bb):** `atlas/app.js` removido, `atlas/data.js` movido para `atlas/public/data.js`, frontend passa a exigir build. Risco de regressão médio; consumidores do formato legado quebram.
+- **Dependência de build:** o Atlas não é mais estático — `dist/` precisa ser gerado com `npm run build`; o SYNAPSE regenera dados (`data.js`) mas não o build, o que pode deixar o `dist/` servido desatualizado.
+- **Superfície nova sem testes:** ~6.8k linhas adicionadas (engine de grafo, API, MCP) sem suite automatizada — qualidade só verificável por execução.
+- **Impacto do SYNAPSE no fluxo de commits:** `core.hooksPath=automation/hooks` desativa hooks padrão de `.git/hooks` em repos onde for instalado (a3742de).
