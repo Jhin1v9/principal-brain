@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# SYNAPSE — post-commit hook
+# Coleta metadados do último commit e dispara o orquestrador DE FORMA
+# ASSÍNCRONA. Este hook NUNCA bloqueia o commit: qualquer falha → exit 0.
+set -u
+
+# --- localização -------------------------------------------------------------
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+AUTOMATION_DIR="$REPO_ROOT/automation"
+SYNAPSE_SH="$AUTOMATION_DIR/synapse.sh"
+[ -f "$SYNAPSE_SH" ] || exit 0
+
+GIT_DIR_PATH="$(git rev-parse --git-dir 2>/dev/null)" || exit 0
+case "$GIT_DIR_PATH" in
+  /*) GIT_DIR_ABS="$GIT_DIR_PATH" ;;
+  *)  GIT_DIR_ABS="$REPO_ROOT/$GIT_DIR_PATH" ;;
+esac
+
+# --- configuração (config.env > ambiente > padrões) ---------------------------
+if [ -f "$AUTOMATION_DIR/config.env" ]; then
+  # shellcheck disable=SC1091
+  . "$AUTOMATION_DIR/config.env"
+fi
+: "${SYNAPSE_DISABLE:=0}"
+: "${KIMI_BIN:=kimi}"
+: "${SYNAPSE_ENTRIES_DIR:=changelog/entries}"
+export SYNAPSE_DISABLE KIMI_BIN SYNAPSE_ENTRIES_DIR
+
+# --- identidade do commit -----------------------------------------------------
+HASH="${1:-}"
+[ -n "$HASH" ] || HASH="$(git rev-parse HEAD 2>/dev/null)" || exit 0
+SHORT="${HASH:0:7}"
+
+# --- guard de idempotência: entrada já existe? --------------------------------
+if ls "$REPO_ROOT/$SYNAPSE_ENTRIES_DIR/"*"-$SHORT.md" >/dev/null 2>&1; then
+  exit 0
+fi
+
+# --- guard de concorrência: lock simples (PID dentro) --------------------------
+LOCK="$GIT_DIR_ABS/synapse.lock"
+if [ -e "$LOCK" ]; then
+  OLD_PID="$(cat "$LOCK" 2>/dev/null || true)"
+  if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+    exit 0  # outra instância está rodando
+  fi
+  rm -f "$LOCK" 2>/dev/null || exit 0  # lock morto: remove e segue
+fi
+
+# --- coleta de metadados → JSON em .git/ --------------------------------------
+jesc()       { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+jesc_multi() { jesc "$1" | sed 's/$/\\n/' | tr -d '\n'; }
+
+ASSUNTO="$(git show -s --format=%s "$HASH" 2>/dev/null)" || exit 0
+
+# commits gerados pelo próprio SYNAPSE não disparam nova classificação
+case "$ASSUNTO" in
+  *"[synapse]"*) exit 0 ;;
+esac
+
+CORPO="$(git show -s --format=%b "$HASH" 2>/dev/null)"
+AUTOR="$(git show -s --format='%an <%ae>' "$HASH" 2>/dev/null)"
+DATA="$(git show -s --format=%aI "$HASH" 2>/dev/null)"
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+DIFF_STAT="$(git show --stat --format= "$HASH" 2>/dev/null)"
+ARQUIVOS_JSON="$(git diff-tree --no-commit-id --name-only -r "$HASH" 2>/dev/null \
+  | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+  | awk '{ if (NR > 1) printf ", "; printf "\"%s\"", $0 }')"
+
+JSON="$GIT_DIR_ABS/synapse-$SHORT.json"
+cat > "$JSON" <<EOF
+{
+  "hash": "$(jesc "$HASH")",
+  "short": "$(jesc "$SHORT")",
+  "autor": "$(jesc "$AUTOR")",
+  "data": "$(jesc "$DATA")",
+  "branch": "$(jesc "$BRANCH")",
+  "assunto": "$(jesc "$ASSUNTO")",
+  "corpo": "$(jesc "$CORPO")",
+  "diff_stat": "$(jesc_multi "$DIFF_STAT")",
+  "arquivos": [${ARQUIVOS_JSON}]
+}
+EOF
+
+# --- disparo assíncrono --------------------------------------------------------
+LOG="$GIT_DIR_ABS/synapse.log"
+if command -v nohup >/dev/null 2>&1; then
+  nohup bash "$SYNAPSE_SH" "$HASH" "$JSON" </dev/null >>"$LOG" 2>&1 &
+  disown 2>/dev/null || true
+elif [ -n "${COMSPEC:-}" ] && command -v start >/dev/null 2>&1; then
+  # último recurso no Git Bash: start //b
+  start //b bash "$SYNAPSE_SH" "$HASH" "$JSON" >>"$LOG" 2>&1 || true
+else
+  # nada disponível: não bloquear o commit de jeito nenhum
+  :
+fi
+
+exit 0

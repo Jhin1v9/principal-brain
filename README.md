@@ -80,6 +80,15 @@ Execute o script `novo_cliente.ps1`:
 .\novo_cliente.ps1 -Nome "NOME_DO_CLIENTE"
 ```
 
+## AUTOMAÇÃO — SYNAPSE
+
+Automação pós-commit com agente de IA: cada `git commit` dispara (de forma
+assíncrona, sem bloquear) a classificação do commit, uma entrada em
+`changelog/entries/`, o índice `changelog/CHANGELOG.md` e o relatório técnico
+`reports/latest.md` — com nota para o cliente em linguagem leiga em cada
+entrada. Instalação, configuração e desinstalação: ver
+[`automation/README.md`](automation/README.md).
+
 ---
 
 _Atualizado: 2026-04-28_  

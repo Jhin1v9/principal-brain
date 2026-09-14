@@ -1,0 +1,4 @@
+# SYNAPSE — hooks e scripts executados pelo git precisam de LF
+automation/** text eol=lf
+changelog/** text eol=lf
+reports/** text eol=lf
