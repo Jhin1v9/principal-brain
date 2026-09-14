@@ -181,8 +181,8 @@ app.get('/data.js', async (_req, reply) => {
   }
 });
 
-app.listen({ port: PORT, host: '127.0.0.1' }).then(() => {
-  console.log(`Atlas API em http://127.0.0.1:${PORT}  (token: ${TOKEN ? 'configurado' : 'NÃO configurado — writes 503'})`);
+app.listen({ port: PORT, host: HOST }).then(() => {
+  console.log(`Atlas API em http://${HOST}:${PORT}  (token: ${TOKEN ? 'configurado' : 'NÃO configurado — writes 503'})`);
 }).catch(err => {
   console.error(err);
   process.exit(1);
