@@ -3,6 +3,7 @@
 
 const DATA = window.ATLAS_DATA;
 const NODES = DATA.nodes;
+NODES.forEach(n => { n.deg = n.deg || 0; });
 const EDGES = DATA.edges;
 
 const CLUSTER_COLORS = {
@@ -156,6 +157,9 @@ function resizeCanvas() {
   canvas.height = r.height * DPR;
 }
 window.addEventListener('resize', () => { resizeCanvas(); drawGraph(); layoutFluxoPipes(); });
+// flex layout: mudanças de conteúdo no header/cluster-bar alteram o espaço do
+// canvas mesmo sem resize de janela (ex.: quebra de linha no mobile)
+if (window.ResizeObserver) new ResizeObserver(() => { resizeCanvas(); drawGraph(); }).observe(document.body);
 
 function physicsTick() {
   const ns = G.nodes;
@@ -503,7 +507,7 @@ function renderSearchResults(q) {
   if (!q.trim() || !found.length) { searchResults.hidden = true; searchResults.innerHTML = ''; return; }
   searchResults.innerHTML = found.map((n, i) => {
     const c = CLUSTER_COLORS[n.cluster];
-    return `<button role="option" data-i="${i}" data-id="${esc(n.id)}"><span class="dot" style="background:${c}"></span><span>${esc(n.title)}</span><small>${n.deg}🔗</small></button>`;
+    return `<button role="option" data-i="${i}" data-id="${esc(n.id)}"><span class="dot" style="background:${c}"></span><span>${esc(n.title)}</span><small>${n.deg || 0}🔗</small></button>`;
   }).join('');
   searchResults.hidden = false;
   searchResults._found = found;
