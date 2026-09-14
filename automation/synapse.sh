@@ -221,9 +221,12 @@ if [ "$KIMI_TIMEOUT" != "0" ] && command -v timeout >/dev/null 2>&1; then
 fi
 
 log "IA: classificando $SHORT com $KIMI_BIN"
+# Contrato via variáveis de ambiente: o Git Bash corrompe caminhos Windows
+# (C:\...) passados como argumento (conversão MSYS), env vars passam intactas.
+export SYNAPSE_REPO="$REPO_ROOT" SYNAPSE_COMMIT_JSON="$JSON" SYNAPSE_HASH="$HASH"
 "${RUN[@]}" "$KIMI_BIN" "${MODEL_ARGS[@]}" \
   --agent-file "$SCRIPT_DIR/prompts/classify-commit.agent.md" \
-  -p "REPO=$REPO_ROOT COMMIT_JSON=$JSON HASH=$HASH" >>"$LOG" 2>&1
+  -p "Classifique o commit indicado pelas variáveis SYNAPSE_* e siga seu contrato." >>"$LOG" 2>&1
 RC=$?
 
 if [ $RC -ne 0 ] || ! ls $ENTRY_GLOB >/dev/null 2>&1; then
@@ -235,9 +238,10 @@ log "IA: entrada criada para $SHORT"
 
 # --- agente 2: relatório (falha aqui não é fatal) -----------------------------
 log "IA: atualizando relatório para $SHORT"
+export SYNAPSE_ENTRIES_ABS="$REPO_ROOT/$SYNAPSE_ENTRIES_DIR" SYNAPSE_REPORT_ABS="$REPO_ROOT/$SYNAPSE_REPORT"
 "${RUN[@]}" "$KIMI_BIN" "${MODEL_ARGS[@]}" \
   --agent-file "$SCRIPT_DIR/prompts/generate-report.agent.md" \
-  -p "REPO=$REPO_ROOT COMMIT_JSON=$JSON HASH=$HASH ENTRIES_DIR=$REPO_ROOT/$SYNAPSE_ENTRIES_DIR REPORT=$REPO_ROOT/$SYNAPSE_REPORT" >>"$LOG" 2>&1
+  -p "Atualize o relatório conforme seu contrato (variáveis SYNAPSE_*)." >>"$LOG" 2>&1
 RC=$?
 if [ $RC -ne 0 ]; then
   log "IA: relatório falhou (rc=$RC) — entrada e changelog já gravados, seguindo"

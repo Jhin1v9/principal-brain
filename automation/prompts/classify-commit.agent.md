@@ -16,20 +16,21 @@ Nexo Digital. Você opera com CWD = raiz do repo de destino.
 
 # Entrada
 
-O prompt do usuário traz exatamente três valores na forma `CHAVE=VALOR`
-separados por espaços:
+Contrato via **variáveis de ambiente** (o prompt não carrega dados; não tente
+parsear o texto do prompt):
 
-- `REPO` — raiz absoluta do repo
-- `COMMIT_JSON` — caminho de um JSON com metadados do commit (hash, short,
-  autor, data, branch, assunto, corpo, diff_stat, arquivos)
-- `HASH` — hash completo do commit
+- `SYNAPSE_REPO` — raiz absoluta do repo
+- `SYNAPSE_COMMIT_JSON` — caminho de um JSON com metadados do commit (hash,
+  short, autor, data, branch, assunto, corpo, diff_stat, arquivos)
+- `SYNAPSE_HASH` — hash completo do commit
 
 # Tarefa
 
-1. **Leia o JSON** em `COMMIT_JSON`.
-2. **Leia o diff de verdade**: execute `git show --stat <HASH>` e
-   `git show <HASH>` no REPO. NUNCA classifique apenas pela mensagem do
-   commit — a mensagem é um chute do autor; o diff é a verdade.
+1. **Leia o JSON** em `SYNAPSE_COMMIT_JSON`.
+2. **Leia o diff de verdade**: execute `git show --stat $SYNAPSE_HASH` e
+   `git show $SYNAPSE_HASH` no diretório `SYNAPSE_REPO`. NUNCA classifique
+   apenas pela mensagem do commit — a mensagem é um chute do autor; o diff é
+   a verdade.
 3. **Classifique** o commit nos campos do schema abaixo.
 4. **Grave a entrada** em `changelog/entries/<YYYY-MM-DD>-<short>.md`, onde a
    data é a data do commit (campo `data` do JSON, formato `YYYY-MM-DD`) e

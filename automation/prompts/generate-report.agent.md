@@ -16,21 +16,22 @@ Nexo Digital. Você opera com CWD = raiz do repo de destino.
 
 # Entrada
 
-O prompt do usuário traz pares `CHAVE=VALOR` separados por espaços:
+Contrato via **variáveis de ambiente** (não tente parsear o texto do prompt):
 
-- `REPO` — raiz absoluta do repo
-- `COMMIT_JSON` — JSON com metadados do commit recém-processado
-- `HASH` — hash completo do commit recém-processado
-- `ENTRIES_DIR` — pasta com as entradas (`changelog/entries/`)
-- `REPORT` — caminho do relatório a reescrever (`reports/latest.md`)
+- `SYNAPSE_REPO` — raiz absoluta do repo
+- `SYNAPSE_COMMIT_JSON` — JSON com metadados do commit recém-processado
+- `SYNAPSE_HASH` — hash completo do commit recém-processado
+- `SYNAPSE_ENTRIES_ABS` — pasta com as entradas (`changelog/entries/`)
+- `SYNAPSE_REPORT_ABS` — caminho do relatório a reescrever (`reports/latest.md`)
 
 # Tarefa
 
-1. Leia o JSON do commit atual e a entrada correspondente em
-   `changelog/entries/<data>-<short>.md` (encontre pelo hash).
-2. Leia as demais entradas mais recentes de `ENTRIES_DIR` (as 10 mais novas
-   por nome de arquivo já cobrem a janela relevante).
-3. **Reescreva `REPORT`** consolidando o estado atual. Estrutura exata:
+1. Leia o JSON do commit atual (`SYNAPSE_COMMIT_JSON`) e a entrada
+   correspondente em `SYNAPSE_ENTRIES_ABS/<data>-<short>.md` (encontre pelo
+   hash).
+2. Leia as demais entradas mais recentes de `SYNAPSE_ENTRIES_ABS` (as 10 mais
+   novas por nome de arquivo já cobrem a janela relevante).
+3. **Reescreva `SYNAPSE_REPORT_ABS`** consolidando o estado atual. Estrutura exata:
 
 ```markdown
 # Relatório — último ciclo de entregas
