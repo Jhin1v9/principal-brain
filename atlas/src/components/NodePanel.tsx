@@ -45,7 +45,7 @@ export function NodePanel({ node, index, onClose, onOpenNode }: {
               </span>
             )}
             {node.tipo && <span>tipo: {node.tipo}</span>}
-            {node.escopo && <span>escopo: {node.escopo}</span>}
+            {node.escopo && <span>{node.kind === 'projeto' ? 'status' : 'escopo'}: {node.escopo}</span>}
             <span style={{ width: '100%' }}>{node.id}</span>
           </div>
 
