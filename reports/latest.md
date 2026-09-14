@@ -4,21 +4,26 @@ _Atualizado automaticamente pelo SYNAPSE em 2026-09-14_
 
 ## Entregues
 
-- **2026-09-14 · bd2daf9 · fix(automation)** — Corrige corrupção de caminhos Windows (`C:\...`) passados como argumento ao agente de IA pelo Git Bash (conversão automática MSYS). `automation/synapse.sh` passa a exportar o contrato como env vars (`SYNAPSE_REPO`, `SYNAPSE_COMMIT_JSON`, `SYNAPSE_HASH`, `SYNAPSE_ENTRIES_ABS`, `SYNAPSE_REPORT_ABS`), e os prompts `classify-commit.agent.md`/`generate-report.agent.md` foram atualizados para documentar as novas chaves.
-- **2026-09-14 · a3742de · feat(automation)** — Introduz o SYNAPSE, automação pós-commit do repo: hook `automation/hooks/post-commit` coleta metadados em JSON e dispara assincronamente o orquestrador `automation/synapse.sh` (249 linhas), que invoca o Kimi Code CLI com os prompts `classify-commit.agent.md` e `generate-report.agent.md`. Inclui fallback determinístico por prefixo conventional-commit, guard de idempotência, lock de concorrência com PID, auto-commit opcional com marca `[synapse]`, instaladores bash/PowerShell configurando `core.hooksPath=automation/hooks`, e esqueleto de `changelog/` e `reports/`. Diff 100% aditivo: +758 linhas, 0 deletadas, 13 arquivos.
+- **2026-09-14 · 5c8c675 · feat(atlas+skill)** — Adiciona o Atlas, painel visual estático do brain (grafo estilo Obsidian em canvas com física própria, filtros, busca, pan/zoom/pinch, Fluxo SYNAPSE e timeline), com `atlas/generate.mjs` gerando `data.js` a partir do vault. Cria também a skill `nexo-workflow/SKILL.md` (contrato operacional do agente). 1.722 linhas aditivas, nenhum arquivo existente alterado.
+- **2026-09-14 · a3742de · feat(automation)** — Introduz o SYNAPSE, automação pós-commit: hook `post-commit` + orquestrador `synapse.sh` com fallback determinístico, idempotência por glob, lock de concorrência, instaladores bash/PowerShell e esqueleto de `changelog/` e `reports/`.
+- **2026-09-14 · bd2daf9 · fix(automation)** — Corrige a passagem de parâmetros para os agentes de IA: caminhos Windows eram corrompidos pela conversão MSYS ao irem como argumento `-p`; agora `synapse.sh` exporta as env vars `SYNAPSE_*` e os prompts documentam o novo contrato.
 
 ## Em andamento
 
-- Validação do novo contrato por env vars: a classificação (agente 1) foi exercitada com sucesso neste commit, mas a geração de relatório (agente 2, não-fatal) ainda não tinha evidência confirmada de execução até este relatório.
+- Consolidação da automação SYNAPSE: fluxo completo ainda não validado de ponta a ponta com commit de prova (verificação de `.git/synapse.log` e artefatos), conforme pendência registrada na entrada a3742de.
 
 ## Próximos passos
 
-- Confirmar em outra execução real que a geração de relatório (agente 2) funciona com o novo contrato, já que ela é não-fatal e um silêncio no log poderia passar despercebido.
-- Considerar validar no início de `synapse.sh` a presença das env vars esperadas (`SYNAPSE_*`) no ambiente do agente, facilitando diagnóstico futuro.
-- Confirmar que não existiam hooks personalizados em `.git/hooks` antes de instalar em outros repos (o instalador sobrescreve o diretório de hooks ativo via `core.hooksPath`).
-- Adicionar `automation/config.env` ao `.gitignore` de forma preventiva, caso venha a conter caminhos locais sensíveis.
+- Rodar `node atlas/generate.mjs` sempre que o vault mudar (ou agendar via SYNAPSE) para evitar grafo desatualizado.
+- Adicionar ao `AGENTS.md` do brain a referência ao Atlas como fonte visual de navegação.
+- Testar o Atlas em mobile (pinch/touch no canvas não validado no diff).
+- Validar em nova execução real a geração de relatório (agente 2) com o contrato por env vars, dado que falhas ali são não-fatais e silenciosas.
+- Considerar validação das env vars esperadas no início de `synapse.sh` para facilitar diagnóstico.
+- Confirmar que não existiam hooks personalizados em `.git/hooks` antes de instalar a automação em outros repos (`core.hooksPath` sobrescreve o diretório ativo).
+- Adicionar `automation/config.env` ao `.gitignore` de forma preventiva.
 
 ## Notas técnicas
 
-- A propagação de env vars depende do `kimi` CLI repassá-las ao processo do modelo — o uso bem-sucedido deste pipeline no commit atual corrobora o funcionamento, mas vale revalidar no agente 2.
-- Mudança de processo: o instalador define `core.hooksPath=automation/hooks`, o que desativa hooks padrão/personalizados em `.git/hooks` caso existam — risco residual baixo, mas deve ser validado antes de replicar a instalação em outros repos.
+- Sem breaking changes nas três entregas; risco de regressão avaliado como baixo em todas (diffs 100% aditivos, exceto o fix de passagem de parâmetros, que elimina o ponto de falha anterior).
+- Ponto de atenção: `atlas/data.js` é gerado e versionado — risco de dados obsoletos (não de quebra) se a regeneração não for disciplinada.
+- Incerteza declarada na entrada a3742de: o instalador define `core.hooksPath=automation/hooks`, o que desativa hooks padrão que estivessem em `.git/hooks`.
