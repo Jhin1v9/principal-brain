@@ -38,6 +38,7 @@ export const CLUSTER_COLORS: Record<string, string> = {
   'Automação SYNAPSE': '#d946ef',
   'Changelog': '#84cc16',
   'Relatórios': '#fb7185',
+  'Projetos': '#f97316',
 };
 
 export const TIPO_COLORS: Record<string, string> = {

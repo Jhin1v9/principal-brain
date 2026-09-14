@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Box, ChevronDown, ExternalLink, Github, Layers, Star, Store, Wrench } from 'lucide-react';
+import { Box, ChevronRight, ExternalLink, FileText, Github, Layers, Star, Store, Wrench } from 'lucide-react';
 import type { AtlasIndex } from '../data';
-import { Markdown } from '../components/markdown';
-import { GRUPOS, STATUS_LABEL } from '../data/projetos';
+import { GRUPOS, TOTAL_PROJETOS } from '../data/projetos';
 import type { GrupoProjetos, Projeto, ProjStatus } from '../data/projetos';
 
 const ICONES: Record<GrupoProjetos['icone'], typeof Star> = {
@@ -20,32 +18,29 @@ const STATUS_COR: Record<ProjStatus, string> = {
   standby: '#6b6f76',
 };
 
-function ProjetoCard({ p, index, indexData, onOpenNode }: {
+function ProjetoCard({ p, index, onOpenNode }: {
   p: Projeto;
   index: number;
-  indexData: AtlasIndex;
   onOpenNode: (id: string) => void;
 }) {
-  const [aberto, setAberto] = useState(false);
   const cor = STATUS_COR[p.status];
-
   return (
     <motion.div
-      className={`proj-card ${aberto ? 'is-open' : ''}`}
+      className="proj-card"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.05, 0.5), duration: 0.3 }}
+      transition={{ delay: Math.min(index * 0.04, 0.5), duration: 0.3 }}
     >
-      <button className="proj-head" onClick={() => setAberto(o => !o)} aria-expanded={aberto}>
+      <button className="proj-head" onClick={() => onOpenNode(`projeto/${p.id}`)}>
         <div className="proj-title">
           <h3>{p.nome}</h3>
           {p.cliente && <span className="proj-cliente">{p.cliente}</span>}
         </div>
         <div className="proj-meta">
           <span className="proj-status" style={{ background: cor + '22', color: cor, border: `1px solid ${cor}55` }}>
-            {STATUS_LABEL[p.status]}
+            {p.status === 'no-ar' ? 'No ar' : p.status === 'evolucao' ? 'Em evolução' : 'Standby'}
           </span>
-          <ChevronDown size={15} className="proj-chevron" aria-hidden="true" />
+          <ChevronRight size={15} className="proj-chevron" aria-hidden="true" />
         </div>
       </button>
       <p className="proj-resumo">{p.resumo}</p>
@@ -60,20 +55,10 @@ function ProjetoCard({ p, index, indexData, onOpenNode }: {
         {p.url && (
           <a href={p.url} target="_blank" rel="noreferrer"><ExternalLink size={12} aria-hidden="true" /> Abrir</a>
         )}
-        <button className="proj-relatorio-btn" onClick={() => setAberto(o => !o)}>
-          {aberto ? 'Fechar relatório' : 'Ver relatório'}
+        <button className="proj-relatorio-btn" onClick={() => onOpenNode(`projeto/${p.id}`)}>
+          <FileText size={11} aria-hidden="true" /> Ver relatório no grafo
         </button>
       </div>
-      {aberto && (
-        <motion.div
-          className="proj-relatorio"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          transition={{ duration: 0.25 }}
-        >
-          <Markdown md={p.relatorio} index={indexData} onNode={onOpenNode} />
-        </motion.div>
-      )}
     </motion.div>
   );
 }
@@ -83,8 +68,6 @@ export function ProjetosView({ index, active, onOpenNode }: {
   active: boolean;
   onOpenNode: (id: string) => void;
 }) {
-  const total = useMemo(() => GRUPOS.reduce((acc, g) => acc + g.projetos.length, 0), []);
-
   return (
     <div id="view-projetos" className="view" role="tabpanel" aria-label="Projetos Nexo">
       <div className="projetos-wrap">
@@ -92,8 +75,8 @@ export function ProjetosView({ index, active, onOpenNode }: {
           <h2 className="font-display">Projetos</h2>
           <p>
             Portfólio vivo da Nexo Digital — clientes, plataforma e catálogos em produção.
-            {' '}<b>{total} projetos</b> em {GRUPOS.length} grupos · levantado em 14/09/2026.
-            Clique num projeto para abrir o relatório completo.
+            {' '}<b>{TOTAL_PROJETOS} projetos</b> em {GRUPOS.length} grupos · fonte única: <code>projects/manifest.json</code>.
+            Clique num projeto para ver a bolinha no grafo com o relatório completo.
           </p>
         </div>
         {GRUPOS.map((g, gi) => {
@@ -105,7 +88,7 @@ export function ProjetosView({ index, active, onOpenNode }: {
               </h3>
               <div className="proj-grid">
                 {g.projetos.map((p, pi) => (
-                  <ProjetoCard key={p.id} p={p} index={gi + pi} indexData={index} onOpenNode={onOpenNode} />
+                  <ProjetoCard key={p.id} p={p} index={gi + pi} onOpenNode={onOpenNode} />
                 ))}
               </div>
             </section>
