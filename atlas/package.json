@@ -1,0 +1,38 @@
+{
+  "name": "brain-atlas",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "NEXO BRAIN — Atlas: mapa vivo do conhecimento (grafo, fluxo SYNAPSE, linha do tempo)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "regenerate": "node generate.mjs",
+    "server": "node server.mjs",
+    "mcp": "node mcp-server.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.5",
+    "@fontsource/space-grotesk": "^5.2.5",
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@tailwindcss/vite": "^4.1.11",
+    "@vitejs/plugin-react": "^4.6.0",
+    "fastify": "^5.3.3",
+    "framer-motion": "^12.23.0",
+    "lucide-react": "^0.525.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.2.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7"
+  }
+}

@@ -185,7 +185,7 @@ prepend_changelog() {
 auto_commit_artifacts() {
   [ "${SYNAPSE_AUTO_COMMIT:-1}" = "1" ] || return 0
   local paths=("$SYNAPSE_ENTRIES_DIR" "$SYNAPSE_CHANGELOG" "$SYNAPSE_REPORT")
-  [ -f "$REPO_ROOT/atlas/data.js" ] && paths+=("atlas/data.js")
+  [ -f "$REPO_ROOT/atlas/public/data.js" ] && paths+=("atlas/public/data.js")
   if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- "${paths[@]}" 2>/dev/null)" ]; then
     git -C "$REPO_ROOT" add -- "${paths[@]}" >/dev/null 2>&1
     if git -C "$REPO_ROOT" commit -m "chore(synapse): registro do commit $SHORT [synapse]" >/dev/null 2>&1; then

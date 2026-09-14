@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Atlas generator — varre o brain e emite atlas/data.js (window.ATLAS_DATA = {...})
+// Atlas generator — varre o brain e emite atlas/public/data.js (window.ATLAS_DATA = {...})
 // Uso: node atlas/generate.mjs   (rode da raiz do repo; o script resolve a raiz sozinho)
+// O Vite copia public/data.js para dist/data.js como script clássico (file:// funciona com duplo clique).
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs';
 import { join, relative, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -276,7 +277,9 @@ const data = {
 };
 
 const out = `// Gerado automaticamente por atlas/generate.mjs — não edite à mão.\nwindow.ATLAS_DATA = ${JSON.stringify(data)};\n`;
-writeFileSync(join(ATLAS_DIR, 'data.js'), out);
+const outDir = join(ATLAS_DIR, 'public');
+if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+writeFileSync(join(outDir, 'data.js'), out);
 
 const perCluster = {};
 for (const n of nodes) perCluster[n.cluster] = (perCluster[n.cluster] || 0) + 1;
