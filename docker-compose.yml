@@ -1,0 +1,13 @@
+services:
+  brain:
+    build: .
+    container_name: nexo-brain
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:4321:4321"
+    env_file: .env
+    volumes:
+      - /opt/nexo-brain-data/learning:/app/learning
+      - /opt/nexo-brain-data/memory:/app/memory

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Clock, Crosshair, Dices, GitCommitHorizontal, Network, RefreshCw, Workflow,
+  Clock, Crosshair, Dices, FolderKanban, GitCommitHorizontal, Network, RefreshCw, Workflow,
 } from 'lucide-react';
 import { buildIndex, loadAtlasData, metaLine } from './data';
 import type { GraphEngine } from './graph/engine';
@@ -13,8 +13,9 @@ import type { PaletteAction } from './components/CommandPalette';
 import { GraphView } from './views/GraphView';
 import { FluxoView } from './views/FluxoView';
 import { TimelineView } from './views/TimelineView';
+import { ProjetosView } from './views/ProjetosView';
 
-const VIEWS: View[] = ['graph', 'fluxo', 'timeline'];
+const VIEWS: View[] = ['graph', 'fluxo', 'timeline', 'projetos'];
 
 function viewFromHash(): View {
   const v = location.hash.replace('#/', '').split('?')[0];
@@ -98,6 +99,7 @@ export default function App() {
     { id: 'go-graph', label: 'Ir para: Grafo', hint: 'Visão', icon: <Network size={15} />, keywords: 'grafo graph', run: () => switchView('graph') },
     { id: 'go-fluxo', label: 'Ir para: Fluxo SYNAPSE', hint: 'Visão', icon: <Workflow size={15} />, keywords: 'fluxo synapse pipeline', run: () => switchView('fluxo') },
     { id: 'go-timeline', label: 'Ir para: Linha do tempo', hint: 'Visão', icon: <Clock size={15} />, keywords: 'timeline changelog histórico', run: () => switchView('timeline') },
+    { id: 'go-projetos', label: 'Ir para: Projetos', hint: 'Visão', icon: <FolderKanban size={15} />, keywords: 'projetos clientes portfólio relatórios', run: () => switchView('projetos') },
     { id: 'recenter', label: 'Centralizar grafo', hint: 'Ação', icon: <Crosshair size={15} />, keywords: 'centralizar fit zoom recentralizar', run: recenter },
     { id: 'random', label: 'Nó aleatório', hint: 'Ação', icon: <Dices size={15} />, keywords: 'aleatório random sorte descobrir', run: randomNode },
     {
@@ -163,6 +165,18 @@ export default function App() {
                 transition={{ duration: 0.22 }}
               >
                 <TimelineView index={index} active onOpenNode={openNode} />
+              </motion.div>
+            )}
+            {view === 'projetos' && (
+              <motion.div
+                key="projetos"
+                className="view"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <ProjetosView index={index} active onOpenNode={openNode} />
               </motion.div>
             )}
           </AnimatePresence>

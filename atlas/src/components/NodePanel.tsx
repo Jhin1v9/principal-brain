@@ -79,18 +79,20 @@ export function NodePanel({ node, index, onClose, onOpenNode }: {
             </ul>
           </div>
 
-          <button
-            type="button"
-            className="btn-open-file"
-            onClick={() => {
-              const url = '../' + node.id.split('/').map(encodeURIComponent).join('/');
-              const a = document.createElement('a');
-              a.href = url; a.target = '_blank'; a.rel = 'noopener';
-              a.click();
-            }}
-          >
-            <FileText size={14} aria-hidden="true" /> Abrir arquivo <ExternalLink size={13} aria-hidden="true" />
-          </button>
+          {node.kind !== 'projeto' && node.kind !== 'grupo' && (
+            <button
+              type="button"
+              className="btn-open-file"
+              onClick={() => {
+                const url = '../' + node.id.split('/').map(encodeURIComponent).join('/');
+                const a = document.createElement('a');
+                a.href = url; a.target = '_blank'; a.rel = 'noopener';
+                a.click();
+              }}
+            >
+              <FileText size={14} aria-hidden="true" /> Abrir arquivo <ExternalLink size={13} aria-hidden="true" />
+            </button>
+          )}
         </motion.aside>
       )}
     </AnimatePresence>

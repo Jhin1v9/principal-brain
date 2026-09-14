@@ -95,6 +95,7 @@ function cleanInline(s) {
 const files = walk(ROOT)
   .map(p => relative(ROOT, p).replace(/\\/g, '/'))
   .filter(rel => !rel.startsWith('atlas/'))
+  .filter(rel => !rel.startsWith('projects/'))
   .filter(rel => {
     const e = extOf(basename(rel));
     return e === '.md' || rel.startsWith('automation/');
@@ -255,6 +256,79 @@ nodes.push(
 const dup = nodes.findIndex(n => n.id === 'automation/prompts/classify-commit.agent.md');
 nodes.splice(dup, 1);
 
+// ---------- nós de PROJETOS (manifestos) ----------
+// Contrato: qualquer repo com o Brain instalado ganha uma bolinha de projeto
+// criando `.brain/project.json` ({id, nome, cliente?, status, stack, atividade?,
+// repo?, url?, grupo?, resumo, relatorio?} + opcional `.brain/relatorio.md`).
+// No brain central, a lista curada vive em projects/manifest.json (+ projects/<id>.md).
+const GRUPO_TITULO = {
+  clientes: 'Clientes — projetos com nome e cara',
+  nucleo: 'Núcleo Nexo Digital — a plataforma',
+  tpv: 'TPV — pontos de venda (11 apps)',
+  saas: 'SaaS — 17 sistemas',
+  'crm-erp': 'CRM/ERP + Negocios — 21 sistemas',
+  ferramentas: 'Ferramentas e produtos em evolução',
+};
+
+function projectNodesFromManifests() {
+  const manifests = [];
+  // 1) brain central: projects/manifest.json (array curada)
+  try {
+    const list = JSON.parse(readFileSync(join(ROOT, 'projects/manifest.json'), 'utf8'));
+    if (Array.isArray(list)) for (const m of list) manifests.push({ ...m, _central: true });
+  } catch { /* sem manifest central */ }
+  // 2) auto-instalação: .brain/project.json do próprio repo
+  try {
+    const self = JSON.parse(readFileSync(join(ROOT, '.brain/project.json'), 'utf8'));
+    if (self && self.id) manifests.push({ ...self, _central: false });
+  } catch { /* sem self-manifest */ }
+
+  const grupos = new Map();
+  const out = [];
+  for (const m of manifests) {
+    const id = String(m.id || '').replace(/[^a-z0-9-]/gi, '').toLowerCase();
+    if (!id || byId.has(`projeto/${id}`)) continue;
+    const grupo = String(m.grupo || 'nucleo');
+    const tituloGrupo = GRUPO_TITULO[grupo] || String(m.grupoTitulo || 'Projetos');
+    if (!grupos.has(grupo)) {
+      grupos.set(grupo, {
+        id: `grupo/${grupo}`, title: tituloGrupo, cluster: 'Projetos', date: null, tipo: null, escopo: null,
+        summary: `Hub do grupo "${tituloGrupo}" — projetos conectados a esta bolinha.`,
+        body: `# ${tituloGrupo}\n\nCada projeto do grupo é uma bolinha conectada a este hub. Clique nelas para abrir o relatório.`,
+        kind: 'grupo', links: [],
+      });
+    }
+    // relatório: campo inline > sidecar projects/<id>.md (central) > .brain/relatorio.md
+    let relatorio = typeof m.relatorio === 'string' ? m.relatorio : '';
+    if (!relatorio && m._central) {
+      try { relatorio = readFileSync(join(ROOT, 'projects', `${id}.md`), 'utf8'); } catch { /* opcional */ }
+    }
+    if (!relatorio) {
+      try { relatorio = readFileSync(join(ROOT, '.brain', 'relatorio.md'), 'utf8'); } catch { /* opcional */ }
+    }
+    const linksLinha = [m.repo && `[GitHub](${m.repo})`, m.url && `[Abrir projeto](${m.url})`].filter(Boolean).join(' · ');
+    const extras = [
+      m.cliente ? `*Cliente: ${m.cliente}*` : '',
+      m.stack ? `*Stack: ${m.stack} · última atividade: ${m.atividade || '—'}*` : '',
+    ].filter(Boolean).join('\n');
+    const body = [relatorio.trim(), linksLinha ? `\n---\n${linksLinha}` : '', extras].filter(Boolean).join('\n\n');
+    const node = {
+      id: `projeto/${id}`, title: m.nome || id, cluster: 'Projetos', date: null, tipo: null,
+      escopo: m.status || null,
+      summary: (m.resumo || '').slice(0, 200),
+      body: body.slice(0, 40000),
+      kind: 'projeto', links: [`grupo/${grupo}`],
+    };
+    out.push(node);
+    grupos.get(grupo).links.push(node.id);
+  }
+  return [...grupos.values(), ...out];
+}
+
+const projetos = projectNodesFromManifests();
+nodes.push(...projetos);
+for (const n of projetos) byId.set(n.id, n);
+
 // ---------- edges ----------
 const edgeSet = new Set();
 const edges = [];
@@ -272,7 +346,7 @@ for (const n of nodes) {
 // ---------- saída ----------
 const data = {
   generatedAt: new Date().toISOString(),
-  clusters: ['Núcleo', 'Personalidades', 'Personas', 'Runbooks', 'Conhecimento', 'Memória', 'Aprendizado', 'Automação SYNAPSE', 'Changelog', 'Relatórios'],
+  clusters: ['Núcleo', 'Personalidades', 'Personas', 'Runbooks', 'Conhecimento', 'Memória', 'Aprendizado', 'Automação SYNAPSE', 'Changelog', 'Relatórios', 'Projetos'],
   nodes, edges,
 };
 

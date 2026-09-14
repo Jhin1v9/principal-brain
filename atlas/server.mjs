@@ -15,6 +15,7 @@ import { spawnSync } from 'node:child_process';
 import { ATLAS_DIR, REPO_ROOT, loadAtlas, buildGraph, searchAtlas } from './lib/atlas-data.mjs';
 
 const PORT = Number(process.env.PORT || 4321);
+const HOST = process.env.HOST || '127.0.0.1';
 const TOKEN = process.env.BRAIN_API_TOKEN || null;
 const DIST = join(ATLAS_DIR, 'dist');
 
@@ -180,8 +181,8 @@ app.get('/data.js', async (_req, reply) => {
   }
 });
 
-app.listen({ port: PORT, host: '127.0.0.1' }).then(() => {
-  console.log(`Atlas API em http://127.0.0.1:${PORT}  (token: ${TOKEN ? 'configurado' : 'NÃO configurado — writes 503'})`);
+app.listen({ port: PORT, host: HOST }).then(() => {
+  console.log(`Atlas API em http://${HOST}:${PORT}  (token: ${TOKEN ? 'configurado' : 'NÃO configurado — writes 503'})`);
 }).catch(err => {
   console.error(err);
   process.exit(1);
