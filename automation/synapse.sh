@@ -184,8 +184,10 @@ prepend_changelog() {
 # pelo hook) -------------------------------------------------------------------
 auto_commit_artifacts() {
   [ "${SYNAPSE_AUTO_COMMIT:-1}" = "1" ] || return 0
-  if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- "$SYNAPSE_ENTRIES_DIR" "$SYNAPSE_CHANGELOG" "$SYNAPSE_REPORT" 2>/dev/null)" ]; then
-    git -C "$REPO_ROOT" add -- "$SYNAPSE_ENTRIES_DIR" "$SYNAPSE_CHANGELOG" "$SYNAPSE_REPORT" >/dev/null 2>&1
+  local paths=("$SYNAPSE_ENTRIES_DIR" "$SYNAPSE_CHANGELOG" "$SYNAPSE_REPORT")
+  [ -f "$REPO_ROOT/atlas/data.js" ] && paths+=("atlas/data.js")
+  if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- "${paths[@]}" 2>/dev/null)" ]; then
+    git -C "$REPO_ROOT" add -- "${paths[@]}" >/dev/null 2>&1
     if git -C "$REPO_ROOT" commit -m "chore(synapse): registro do commit $SHORT [synapse]" >/dev/null 2>&1; then
       log "artefatos do $SHORT commitados automaticamente"
     else
@@ -247,6 +249,15 @@ if [ $RC -ne 0 ]; then
   log "IA: relatório falhou (rc=$RC) — entrada e changelog já gravados, seguindo"
 else
   log "IA: relatório atualizado para $SHORT"
+fi
+
+# --- regenera o Atlas, se o repo tiver um (mantém o grafo vivo) ----------------
+if [ -f "$REPO_ROOT/atlas/generate.mjs" ] && command -v node >/dev/null 2>&1; then
+  if (cd "$REPO_ROOT" && node atlas/generate.mjs >>"$LOG" 2>&1); then
+    log "atlas regenerado"
+  else
+    log "atenção: regeneração do atlas falhou (não fatal)"
+  fi
 fi
 
 auto_commit_artifacts
