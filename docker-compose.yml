@@ -11,3 +11,6 @@ services:
     volumes:
       - /opt/nexo-brain-data/learning:/app/learning
       - /opt/nexo-brain-data/memory:/app/memory
+      # projetos registrados via API vivam no host: persistem rebuilds,
+      # são versionados no git e aparecem no grafo sem rebuild de imagem
+      - /opt/nexo-brain/projects:/app/projects

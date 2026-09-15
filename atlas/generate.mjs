@@ -354,6 +354,10 @@ const out = `// Gerado automaticamente por atlas/generate.mjs — não edite à 
 const outDir = join(ATLAS_DIR, 'public');
 if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'data.js'), out);
+// runtime: o servidor serve dist/data.js — regenerar também lá para que
+// /api/regenerate e /api/projects/register apareçam no grafo SEM rebuild
+const distDir = join(ATLAS_DIR, 'dist');
+if (existsSync(distDir)) writeFileSync(join(distDir, 'data.js'), out);
 
 const perCluster = {};
 for (const n of nodes) perCluster[n.cluster] = (perCluster[n.cluster] || 0) + 1;
