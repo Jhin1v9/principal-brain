@@ -11,6 +11,7 @@ export interface GraphNode extends AtlasNode {
 export interface EngineEvents {
   onOpenNode: (id: string) => void;
   onHover: (id: string | null) => void;
+  onTapEmpty: () => void;
 }
 
 interface Particle { x: number; y: number; r: number; speed: number; drift: number; alpha: number; }
@@ -41,6 +42,17 @@ export class GraphEngine {
   private time = 0;
   private centroidsTick = 0;
   private reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // câmera: animação suave (zoom step, fit, duplo toque) + inércia do pan
+  private camAnim: { t0: number; dur: number; k0: number; tx0: number; ty0: number; k1: number; tx1: number; ty1: number } | null = null;
+  private inertia = { x: 0, y: 0, on: false };
+  private lastPanPt: { x: number; y: number; t: number } | null = null;
+  private lastTap: { x: number; y: number; t: number } | null = null;
+  // área útil da viewport: painel de nó aberto desconta à direita (desktop)
+  private insetRight = 0;
+  private lastFit: { k: number; tx: number; ty: number } | null = null;
+  private lastInteract = performance.now();
+  private idleTick = 0;
 
   clusterFilter: string | null = null;
   query = '';
@@ -86,25 +98,83 @@ export class GraphEngine {
     this.canvas.height = Math.max(1, r.height * this.dpr);
   }
 
-  fit(margin = 0.82) {
+  private computeFit(margin = 0.95) {
     const r = this.canvas.parentElement!.getBoundingClientRect();
+    const w = Math.max(1, r.width - this.insetRight), h = Math.max(1, r.height);
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const n of this.nodes) {
       minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
       minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
     }
     const bw = Math.max(maxX - minX, 1), bh = Math.max(maxY - minY, 1);
-    this.k = Math.max(0.3, Math.min(Math.min(r.width / bw, r.height / bh) * margin, 1.5));
-    this.tx = -((minX + maxX) / 2) * this.k;
-    this.ty = -((minY + maxY) / 2) * this.k;
+    const k = Math.max(0.3, Math.min(Math.min(w / bw, h / bh) * margin, 2.4));
+    // o centro da área útil está deslocado de insetRight/2 para a esquerda
+    return { k, tx: -((minX + maxX) / 2) * k - this.insetRight / 2, ty: -((minY + maxY) / 2) * k };
+  }
+
+  fit(margin = 0.95) {
+    const f = this.computeFit(margin);
+    this.k = f.k; this.tx = f.tx; this.ty = f.ty;
+    this.lastFit = f;
+  }
+
+  fitAnimated(dur = 340) {
+    const f = this.computeFit();
+    this.lastFit = f;
+    this.animateCam(f.k, f.tx, f.ty, dur);
+  }
+
+  setInsetRight(px: number) {
+    this.insetRight = Math.max(0, px);
+  }
+
+  hasInset() { return this.insetRight > 0; }
+
+  /** zoom animado pelos botões: aproxima (1) / afasta (-1) focando o centro útil */
+  zoomStep(dir: 1 | -1) {
+    const fx = -this.insetRight / 2, fy = 0;
+    const k1 = Math.max(0.22, Math.min(this.k * (dir > 0 ? 1.6 : 0.625), 3.2));
+    const tx1 = fx - (fx - this.tx) * (k1 / this.k);
+    const ty1 = fy - (fy - this.ty) * (k1 / this.k);
+    this.animateCam(k1, tx1, ty1, 240);
+  }
+
+  /** zoom animado num ponto de tela (duplo toque / duplo clique) */
+  zoomAtAnimated(px: number, py: number, factor: number) {
+    const r = this.canvas.getBoundingClientRect();
+    const cx = px - r.left - r.width / 2, cy = py - r.top - r.height / 2;
+    const k1 = Math.max(0.22, Math.min(this.k * factor, 3.2));
+    const tx1 = cx - (cx - this.tx) * (k1 / this.k);
+    const ty1 = cy - (cy - this.ty) * (k1 / this.k);
+    this.animateCam(k1, tx1, ty1, 260);
+  }
+
+  private animateCam(k1: number, tx1: number, ty1: number, dur = 280) {
+    this.camAnim = { t0: performance.now(), dur, k0: this.k, tx0: this.tx, ty0: this.ty, k1, tx1, ty1 };
+    this.inertia.on = false;
+    this.inertia.x = this.inertia.y = 0;
+  }
+
+  private stepCam(now: number) {
+    const a = this.camAnim;
+    if (!a) return;
+    const t = Math.min(1, (now - a.t0) / a.dur);
+    const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    this.k = a.k0 + (a.k1 - a.k0) * e;
+    this.tx = a.tx0 + (a.tx1 - a.tx0) * e;
+    this.ty = a.ty0 + (a.ty1 - a.ty0) * e;
+    if (t >= 1) this.camAnim = null;
   }
 
   centerOnNode(id: string, k = 1.15) {
     const n = this.nodeById.get(id);
     if (!n) return;
-    this.k = k;
-    this.tx = -n.x * k;
-    this.ty = -n.y * k;
+    this.camAnim = null;
+    const k2 = Math.max(k, this.k);
+    this.k = k2;
+    // centraliza na área útil (descontando o painel à direita, quando aberto)
+    this.tx = -n.x * k2 - this.insetRight / 2;
+    this.ty = -n.y * k2;
     this.alpha = Math.max(this.alpha, 0.6);
   }
 
@@ -424,10 +494,30 @@ export class GraphEngine {
   private loop() {
     if (this.disposed) return;
     this.time = performance.now();
+    if (this.inertia.on) {
+      this.tx += this.inertia.x;
+      this.ty += this.inertia.y;
+      this.inertia.x *= 0.93;
+      this.inertia.y *= 0.93;
+      if (Math.hypot(this.inertia.x, this.inertia.y) < 0.35) this.inertia.on = false;
+    }
+    this.stepCam(this.time);
     if (this.physics && !this.reducedMotion) this.physicsTick();
     if (++this.centroidsTick % 12 === 0) this.updateCentroids();
+    if (++this.idleTick % 120 === 0) this.checkIdleRefit();
     this.drawGraph();
     this.raf = requestAnimationFrame(this.loop);
+  }
+
+  // a física puxa a nuvem para o centro com o tempo; se o usuário está parado,
+  // sem seleção e sem filtro, a câmera volta a enquadrar o universo sozinha
+  private checkIdleRefit() {
+    if (this.selected || this.hover || this.dragState || this.camAnim || this.inertia.on) return;
+    if (this.query || this.clusterFilter) return;
+    if (performance.now() - this.lastInteract < 5000) return;
+    const need = this.computeFit();
+    this.lastFit = need;
+    if (need.k > this.k * 1.45) this.animateCam(need.k, need.tx, need.ty, 520);
   }
 
   /* ---------------- interação ---------------- */
@@ -440,9 +530,11 @@ export class GraphEngine {
     };
   }
 
-  private nodeAt(px: number, py: number): GraphNode | null {
+  private nodeAt(px: number, py: number, pointerType: string): GraphNode | null {
     const r = this.canvas.getBoundingClientRect();
-    let best: GraphNode | null = null, bestD = 20;
+    // toque precisa de área generosa (alvo ~44px); mouse fica preciso
+    const slack = pointerType === 'touch' ? 26 : 20;
+    let best: GraphNode | null = null, bestD = slack;
     for (const node of this.nodes) {
       const x = node.x * this.k + r.width / 2 + this.tx;
       const y = node.y * this.k + r.height / 2 + this.ty;
@@ -464,21 +556,28 @@ export class GraphEngine {
   private onPointerDown = (ev: PointerEvent) => {
     this.canvas.setPointerCapture(ev.pointerId);
     this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    // gesto do usuário sempre interrompe animação de câmera e inércia
+    this.camAnim = null;
+    this.inertia.on = false;
+    this.inertia.x = this.inertia.y = 0;
+    this.lastInteract = performance.now();
     if (this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
       this.pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
       this.dragState = { type: 'pinch', moved: 0 };
       return;
     }
-    const node = this.nodeAt(ev.clientX, ev.clientY);
+    const node = this.nodeAt(ev.clientX, ev.clientY, ev.pointerType);
     this.dragState = node
       ? { type: 'node', node, moved: 0 }
       : { type: 'pan', moved: 0, sx: ev.clientX, sy: ev.clientY, tx0: this.tx, ty0: this.ty };
+    this.lastPanPt = { x: ev.clientX, y: ev.clientY, t: performance.now() };
     this.canvas.classList.add('is-dragging');
   };
 
   private onPointerMove = (ev: PointerEvent) => {
-    if (this.pointers.has(ev.pointerId)) this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    const prev = this.pointers.get(ev.pointerId);
+    if (prev) this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
 
     if (this.dragState?.type === 'pinch' && this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
@@ -488,14 +587,28 @@ export class GraphEngine {
         this.zoomAt(mid.x, mid.y, d / this.pinchDist);
       }
       this.pinchDist = d;
+      this.lastInteract = performance.now();
       return;
     }
     if (this.dragState) {
-      const dx = ev.movementX ?? 0, dy = ev.movementY ?? 0;
+      const dx = prev ? ev.clientX - prev.x : 0;
+      const dy = prev ? ev.clientY - prev.y : 0;
       this.dragState.moved += Math.abs(dx) + Math.abs(dy);
+      this.lastInteract = performance.now();
       if (this.dragState.type === 'pan') {
         this.tx = this.dragState.tx0! + (ev.clientX - this.dragState.sx!);
         this.ty = this.dragState.ty0! + (ev.clientY - this.dragState.sy!);
+        // amostragem de velocidade para a inércia (px por frame a ~60fps)
+        const now = performance.now();
+        const lp = this.lastPanPt;
+        if (lp && now > lp.t) {
+          const dt = now - lp.t;
+          const vx = (ev.clientX - lp.x) / dt * 16;
+          const vy = (ev.clientY - lp.y) / dt * 16;
+          this.inertia.x = this.inertia.x * 0.6 + vx * 0.4;
+          this.inertia.y = this.inertia.y * 0.6 + vy * 0.4;
+        }
+        this.lastPanPt = { x: ev.clientX, y: ev.clientY, t: now };
       } else if (this.dragState.type === 'node' && this.dragState.moved > 3 && this.dragState.node) {
         const p = this.screenToWorld(ev.clientX, ev.clientY);
         this.dragState.node.x = p.x; this.dragState.node.y = p.y;
@@ -504,35 +617,67 @@ export class GraphEngine {
       }
       return;
     }
-    const node = this.nodeAt(ev.clientX, ev.clientY);
-    const id = node ? node.id : null;
-    if (id !== this.hover) {
-      this.hover = id;
-      this.canvas.style.cursor = node ? 'pointer' : 'grab';
-      this.events.onHover(id);
+    if (ev.pointerType === 'mouse') {
+      const node = this.nodeAt(ev.clientX, ev.clientY, ev.pointerType);
+      const id = node ? node.id : null;
+      if (id !== this.hover) {
+        this.hover = id;
+        this.canvas.style.cursor = node ? 'pointer' : 'grab';
+        this.events.onHover(id);
+      }
     }
   };
 
   private onPointerUp = (ev: PointerEvent) => {
     this.pointers.delete(ev.pointerId);
     this.canvas.classList.remove('is-dragging');
-    if (this.dragState && this.dragState.moved < 4) {
-      if (this.dragState.type === 'node' && this.dragState.node) {
-        this.events.onOpenNode(this.dragState.node.id);
+    const st = this.dragState;
+    if (st && st.type === 'pan' && st.moved > 6 && this.pointers.size === 0 &&
+        Math.hypot(this.inertia.x, this.inertia.y) > 2) {
+      this.inertia.on = true;
+    }
+    if (st && st.moved < 5 && this.pointers.size === 0) {
+      if (st.type === 'node' && st.node) {
+        this.events.onOpenNode(st.node.id);
+      } else if (st.type === 'pan') {
+        const now = performance.now();
+        const lt = this.lastTap;
+        const isDbl = lt && now - lt.t < 300 && Math.hypot(ev.clientX - lt.x, ev.clientY - lt.y) < 28;
+        if (isDbl && ev.pointerType !== 'mouse') {
+          this.zoomAtAnimated(ev.clientX, ev.clientY, 1.65);
+          this.lastTap = null;
+        } else {
+          this.lastTap = { x: ev.clientX, y: ev.clientY, t: now };
+          // toque simples no vazio solta o nó selecionado
+          this.events.onTapEmpty();
+        }
       }
     }
-    this.dragState = null;
+    if (this.pointers.size === 0) {
+      this.dragState = null;
+      this.lastPanPt = null;
+    }
     this.pinchDist = 0;
   };
 
   private onPointerCancel = (ev: PointerEvent) => {
     this.pointers.delete(ev.pointerId);
     this.dragState = null;
+    this.inertia.on = false;
+    this.lastPanPt = null;
   };
 
   private onWheel = (ev: WheelEvent) => {
     ev.preventDefault();
+    this.camAnim = null;
+    this.lastInteract = performance.now();
     this.zoomAt(ev.clientX, ev.clientY, ev.deltaY < 0 ? 1.12 : 0.89);
+  };
+
+  private onDblClick = (ev: MouseEvent) => {
+    ev.preventDefault();
+    this.lastInteract = performance.now();
+    this.zoomAtAnimated(ev.clientX, ev.clientY, ev.shiftKey ? 0.62 : 1.6);
   };
 
   private bind() {
@@ -541,6 +686,7 @@ export class GraphEngine {
     this.canvas.addEventListener('pointerup', this.onPointerUp);
     this.canvas.addEventListener('pointercancel', this.onPointerCancel);
     this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
+    this.canvas.addEventListener('dblclick', this.onDblClick);
   }
 
   private unbind() {
@@ -549,6 +695,7 @@ export class GraphEngine {
     this.canvas.removeEventListener('pointerup', this.onPointerUp);
     this.canvas.removeEventListener('pointercancel', this.onPointerCancel);
     this.canvas.removeEventListener('wheel', this.onWheel);
+    this.canvas.removeEventListener('dblclick', this.onDblClick);
   }
 }
 

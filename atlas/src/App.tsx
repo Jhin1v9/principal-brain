@@ -50,6 +50,7 @@ export default function App() {
         if (index.byId.has(id)) setSelectedId(id);
       }
     };
+    apply(); // processa deep-link na carga inicial
     window.addEventListener('hashchange', apply);
     return () => window.removeEventListener('hashchange', apply);
   }, [index]);
@@ -66,19 +67,36 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const closePanel = useCallback(() => {
+    setSelectedId(null);
+    history.replaceState(null, '', `#/${viewRef.current}`);
+  }, []);
+
   const openNode = useCallback((id: string) => {
     if (!index.byId.has(id)) return;
+    // clicar de novo no nó selecionado solta ele (toggle)
+    if (selectedId === id) { closePanel(); return; }
     setSelectedId(id);
     setView('graph');
     history.replaceState(null, '', `#/graph?node=${encodeURIComponent(id)}`);
     // espera o grafo estar visível para centralizar
     requestAnimationFrame(() => engineRef.current?.centerOnNode(id, 1.15));
-  }, [index]);
+  }, [index, selectedId, closePanel]);
 
-  const closePanel = useCallback(() => {
-    setSelectedId(null);
-    history.replaceState(null, '', `#/${viewRef.current}`);
-  }, []);
+  // ESC fecha a paleta ou solta o nó selecionado
+  const paletteRef = useRef(paletteOpen);
+  paletteRef.current = paletteOpen;
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Escape') return;
+      if (paletteRef.current) setPaletteOpen(false);
+      else if (selectedRef.current) closePanel();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [closePanel]);
 
   const recenter = useCallback(() => {
     const e = engineRef.current;

@@ -1,6 +1,7 @@
 import { Crosshair, FolderKanban, GitCommitHorizontal, Network, Pause, Play, Workflow } from 'lucide-react';
 import type { AtlasIndex } from '../data';
 import { SearchBox } from './SearchBox';
+import { useCanScroll } from './useCanScroll';
 
 export type View = 'graph' | 'fluxo' | 'timeline' | 'projetos';
 
@@ -21,6 +22,7 @@ export function Topbar(props: {
   index: AtlasIndex;
   onOpenNode: (id: string) => void;
 }) {
+  const tabsScroll = useCanScroll();
   return (
     <header className="topbar glass">
       <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
@@ -45,7 +47,12 @@ export function Topbar(props: {
         </div>
       </div>
 
-      <nav className="tabs" role="tablist" aria-label="Visões do atlas">
+      <nav
+        ref={tabsScroll.ref}
+        className={`tabs ${tabsScroll.canScroll ? 'can-scroll' : ''}`}
+        role="tablist"
+        aria-label="Visões do atlas"
+      >
         {TABS.map(t => (
           <button
             key={t.key}

@@ -73,8 +73,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-vis
   display: flex; gap: 4px; margin-left: auto;
   background: rgba(2, 6, 23, .5); border: 1px solid var(--border);
   border-radius: 999px; padding: 4px;
+  max-width: 100%;
+  overflow-x: auto; scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
+.tabs::-webkit-scrollbar { display: none; }
 .tab {
+  flex: none; scroll-snap-align: center;
   display: inline-flex; align-items: center; gap: 7px;
   font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 600;
   letter-spacing: .03em; color: var(--text-dim);
@@ -174,6 +180,24 @@ main { position: relative; z-index: 10; flex: 1; min-height: 0; margin: 10px 16p
   transition: opacity .6s;
 }
 .graph-hint.is-hidden { opacity: 0; pointer-events: none; }
+
+/* ---------- Controles de navegação do grafo (padrão Google Maps/Mapbox) ---------- */
+.graph-controls {
+  position: absolute; right: 16px; bottom: 16px; z-index: 16;
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 6px; border-radius: 15px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+}
+.graph-controls button {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--text-dim);
+  background: rgba(2, 6, 23, .55); border: 1px solid var(--border);
+  transition: color .2s, border-color .2s, transform .12s, background .2s;
+}
+.graph-controls button:hover { color: #fff; border-color: var(--border-strong); }
+.graph-controls button:active { transform: scale(.92); }
+#view-graph.has-panel .graph-controls { right: min(458px, calc(100% - 64px)); }
 
 /* ---------- Node panel ---------- */
 .node-panel {
@@ -455,21 +479,35 @@ main { position: relative; z-index: 10; flex: 1; min-height: 0; margin: 10px 16p
   .brand-mark svg { width: 22px; height: 22px; }
   .brand-text h1 { font-size: 14px; }
   .brand-text p { display: none; }
-  .tabs { padding: 3px; gap: 3px; }
+  .tabs { padding: 3px; gap: 2px; }
   .tab { font-size: 11.5px; padding: 6px 12px; }
-  .cluster-bar { margin: 8px 10px 0; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .cluster-bar {
+    margin: 8px 10px 0; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  }
+  .cluster-bar.can-scroll {
+    /* fade nas bordas: mostra que dá pra rolar (nada fica "invisível") */
+    mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  }
   .cluster-bar::-webkit-scrollbar { display: none; }
   .cluster-pill { flex: none; font-size: 10.5px; padding: 4px 10px; }
   main { margin: 8px 10px 0; }
+  .graph-controls { right: 12px; bottom: 12px; }
+  .graph-controls button { width: 46px; height: 46px; }
+  #view-graph.has-panel .graph-controls { display: none; }
 }
 @media (max-width: 560px) {
   .brand-text { display: none; }
-  .topbar { gap: 8px; }
+  .topbar { margin: 8px 8px 0; padding: 6px 8px; gap: 8px; }
   .search-box { flex: 1; width: auto; padding: 6px 12px; }
   .search-box input { font-size: 12px; }
   .icon-btn { width: 32px; height: 32px; border-radius: 10px; }
-  .tabs { order: 3; width: 100%; margin: 6px 0 0; }
-  .tab { font-size: 11px; padding: 5px 10px; gap: 5px; flex: none; }
-  .tab svg { width: 12px; height: 12px; }
+  .tabs { padding: 2px; gap: 2px; }
+  .tabs.can-scroll {
+    mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+  }
+  .tab { font-size: 10px; padding: 5px 6px; gap: 3px; }
+  .tab svg { width: 11px; height: 11px; }
   main { margin: 6px 8px 0; }
 }
