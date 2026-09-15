@@ -15,7 +15,7 @@ export function HintBar({ canvasRef }: { canvasRef: React.RefObject<HTMLCanvasEl
   }, [canvasRef]);
   return (
     <div className={`graph-hint glass ${hidden ? 'is-hidden' : ''}`}>
-      arraste para mover · roda para zoom · clique num nó para abrir
+      arraste para mover · roda para zoom · duplo clique aproxima · clique no vazio solta o nó
     </div>
   );
 }

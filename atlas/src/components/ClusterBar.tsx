@@ -1,10 +1,17 @@
 import { motion } from 'framer-motion';
 import type { AtlasIndex } from '../data';
 import { clusterColor } from '../data';
+import { useCanScroll } from './useCanScroll';
 
 export function ClusterBar({ index, filter, onFilter }: { index: AtlasIndex; filter: string | null; onFilter: (c: string | null) => void }) {
+  const scroll = useCanScroll<HTMLDivElement>();
   return (
-    <div className="cluster-bar" role="toolbar" aria-label="Contadores e filtro por cluster">
+    <div
+      ref={scroll.ref}
+      className={`cluster-bar ${scroll.canScroll ? 'can-scroll' : ''}`}
+      role="toolbar"
+      aria-label="Contadores e filtro por cluster"
+    >
       {index.data.clusters.map(c => {
         const count = index.data.nodes.filter(n => n.cluster === c).length;
         const color = clusterColor(c);
