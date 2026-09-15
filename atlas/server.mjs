@@ -4,12 +4,13 @@
 //
 //   node atlas/server.mjs        (rode da raiz do repo ou de atlas/)
 //
-// Reads (CORS *):  /api/health /api/graph /api/nodes/:id /api/search /api/clusters /api/timeline /api/synapse/status
+// Reads (CORS *):  /api/health /api/graph /api/nodes/:id /api/search /api/clusters /api/timeline /api/synapse/status /api/projects/registered
 // Writes (Bearer): POST /api/learning/outcomes  POST /api/memory/notes  POST /api/regenerate
+//                  POST /api/projects/register  DELETE /api/projects/:id
 // Writes exigem o env BRAIN_API_TOKEN; sem ele configurado → 503, token errado → 401.
 
 import Fastify from 'fastify';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { ATLAS_DIR, REPO_ROOT, loadAtlas, buildGraph, searchAtlas } from './lib/atlas-data.mjs';
@@ -43,8 +44,9 @@ app.get('/api/health', async () => {
 
 app.get('/api/graph', async () => stats().data);
 
-app.get('/api/nodes/:id', async (req, reply) => {
-  const { id } = req.params;
+// wildcard porque ids de projeto têm barra (projeto/<id>)
+app.get('/api/nodes/*', async (req, reply) => {
+  const id = req.params['*'];
   const data = loadAtlas();
   const { byId, backlinks } = buildGraph(data);
   const node = byId.get(id);
@@ -160,6 +162,103 @@ app.post('/api/regenerate', async (_req, reply) => {
   const { nodes, edges } = stats();
   return { ok: true, nodes, edges };
 });
+
+/* --------------------------- projetos no grafo --------------------------- */
+// Contrato: qualquer repo com o Brain instalado tem `.brain/project.json`.
+// O instalador (install.sh) envia esse JSON pra cá e o projeto vira uma
+// bolinha no cluster "Projetos" com relatório próprio — sem rebuild.
+
+const PROJECTS_MANIFEST = join(REPO_ROOT, 'projects', 'manifest.json');
+
+function readManifest() {
+  try {
+    const list = JSON.parse(readFileSync(PROJECTS_MANIFEST, 'utf8'));
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
+function writeManifest(list) {
+  mkdirSync(join(REPO_ROOT, 'projects'), { recursive: true });
+  const tmp = PROJECTS_MANIFEST + '.tmp';
+  writeFileSync(tmp, JSON.stringify(list, null, 2) + '\n', 'utf8');
+  renameSync(tmp, PROJECTS_MANIFEST);
+}
+
+function regenerate() {
+  const res = spawnSync(process.execPath, [join(ATLAS_DIR, 'generate.mjs')], {
+    cwd: REPO_ROOT, timeout: 60_000, encoding: 'utf8',
+  });
+  if (res.error || res.status !== 0) {
+    return { ok: false, error: String(res.error || res.stderr || res.stdout).slice(0, 500) };
+  }
+  const { nodes, edges } = stats();
+  return { ok: true, nodes, edges };
+}
+
+// lista aberta: o instalador usa pra conferir se um projeto já está registrado
+app.get('/api/projects/registered', async () => ({
+  projects: readManifest().map(m => ({ id: m.id, nome: m.nome, status: m.status || null, grupo: m.grupo || null })),
+}));
+
+const PROJECT_FIELDS = ['id', 'nome', 'cliente', 'status', 'stack', 'atividade', 'repo', 'url', 'grupo', 'resumo'];
+
+app.post('/api/projects/register', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const body = req.body || {};
+  if (!body.nome || !String(body.nome).trim()) {
+    return reply.code(400).send({ error: 'nome é obrigatório' });
+  }
+  const id = slugify(body.id || body.nome);
+  const entry = {};
+  for (const f of PROJECT_FIELDS) {
+    if (body[f] !== undefined && body[f] !== null && String(body[f]).trim() !== '') {
+      entry[f] = String(body[f]).trim();
+    }
+  }
+  entry.id = id;
+  // relatório: body.relatorio (string md) vira sidecar projects/<id>.md e some do manifest
+  const relatorio = typeof body.relatorio === 'string' ? body.relatorio.trim() : '';
+  delete entry.relatorio;
+
+  const list = readManifest();
+  const idx = list.findIndex(m => m.id === id);
+  const merged = idx >= 0 ? { ...list[idx], ...entry } : entry;
+  if (relatorio) {
+    delete merged.md; // relatório inline vence sidecar antigo
+    writeManifestSafe(id, relatorio);
+  } else if (idx < 0) {
+    merged.md = `${id}.md`; // novo sem relatório: sidecar pode chegar depois
+  }
+  if (idx >= 0) list[idx] = merged; else list.push(merged);
+  writeManifest(list);
+
+  const gen = regenerate();
+  if (!gen.ok) return reply.code(500).send({ ok: false, registered: id, error: `registrado, mas regenerate falhou: ${gen.error}` });
+  return { ok: true, id, node: `projeto/${id}`, nodes: gen.nodes, edges: gen.edges };
+});
+
+app.delete('/api/projects/:id', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const id = slugify(req.params.id);
+  const list = readManifest();
+  const idx = list.findIndex(m => m.id === id);
+  if (idx < 0) return reply.code(404).send({ error: `projeto não registrado: ${id}` });
+  list.splice(idx, 1);
+  writeManifest(list);
+  try { rmSync(join(REPO_ROOT, 'projects', `${id}.md`), { force: true }); } catch { /* opcional */ }
+  const gen = regenerate();
+  if (!gen.ok) return reply.code(500).send({ ok: false, removed: id, error: `removido, mas regenerate falhou: ${gen.error}` });
+  return { ok: true, removed: id, nodes: gen.nodes, edges: gen.edges };
+});
+
+function writeManifestSafe(id, relatorio) {
+  const dir = join(REPO_ROOT, 'projects');
+  mkdirSync(dir, { recursive: true });
+  const fp = join(dir, `${id}.md`);
+  const tmp = fp + '.tmp';
+  writeFileSync(tmp, relatorio + '\n', 'utf8');
+  renameSync(tmp, fp);
+}
 
 /* --------------------------- estático dist --------------------------- */
 // zero-dep além do fastify: serve os arquivos de dist/ manualmente

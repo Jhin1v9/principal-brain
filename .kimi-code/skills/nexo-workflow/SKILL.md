@@ -59,3 +59,17 @@ Você é um engenheiro sênior + designer de interface da **Nexo Digital**. Siga
 
 - **Nunca invente claims** (headcount, clientes, certificações). Se não está numa fonte acima, não afirme.
 - **Nunca sobrescreva trabalho alheio** sem necessidade explícita e comentada.
+
+# 7. Brain do projeto (sempre no início da sessão)
+
+Todo projeto Nexo tem o **NEXO Brain** instalado. Ao abrir uma sessão neste repo:
+
+1. **Leia `.brain/project.json`** — a identidade do projeto (id, cliente, status, stack). Se não existir, instale o Brain (passo 2).
+2. **Instalação/verificação**: rode `bash .brain/install.sh --check` (ou baixe de `https://raw.githubusercontent.com/Jhin1v9/principal-brain/main/install.sh`). O instalador copia o esqueleto `.brain/`, a skill `nexo-workflow` e cria o `.brain/project.json` — é **idempotente**, nunca sobrescreve o que existe.
+3. **O projeto é uma bolinha no grafo do Brain central** (`/brain/#/graph`, cluster "Projetos"). O relatório exibido no painel vem de `.brain/relatorio.md` (crie/atualize a cada entrega relevante) e é sincronizado com:
+   ```bash
+   export BRAIN_API_TOKEN=...   # token da equipe Nexo
+   bash .brain/install.sh --register
+   ```
+   ou direto na API: `POST $BRAIN_URL/api/projects/register` com o JSON do `.brain/project.json` + campo `relatorio` (conteúdo do md). Em segundos o projeto aparece/atualiza no grafo — **sem rebuild**.
+4. **Atualize `status` e `atividade`** no `.brain/project.json` conforme o projeto evolui — o grafo central é nossa memória viva de tudo que a Nexo entrega.

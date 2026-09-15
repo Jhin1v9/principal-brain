@@ -11,4 +11,5 @@ COPY --from=build /app ./
 RUN cd atlas && npm ci --omit=dev && rm -rf /root/.npm
 ENV PORT=4321
 EXPOSE 4321
-CMD ["node", "atlas/server.mjs"]
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+CMD ["/app/docker-entrypoint.sh"]

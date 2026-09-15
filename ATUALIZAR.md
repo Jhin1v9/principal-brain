@@ -8,8 +8,10 @@ Clone de trabalho do deploy. `/opt` é root-only, então a criação inicial foi
 
 - **Código**: `/opt/nexo-brain` (clone de https://github.com/Jhin1v9/principal-brain, branch main)
 - **Dados persistentes** (writes da API): `/opt/nexo-brain-data/learning` e `/opt/nexo-brain-data/memory` (volumes rw no compose — seed inicial veio do repo)
+- **Projetos registrados via API**: `/opt/nexo-brain/projects` (volume rw — registros sobrevivem rebuilds e são versionados no git). Arquivos novos lá ficam root-owned até `docker run --rm -v /opt/nexo-brain/projects:/p alpine chown -R 1001:1001 /p`
 - **Token de escrita**: `/opt/nexo-brain/.env` (`BRAIN_API_TOKEN`, chmod 600, NUNCA commitar)
 - **Caddy**: rota no `/etc/caddy/Caddyfile` — `redir /brain /brain/ 308` + `handle /brain/*` com `uri strip_prefix /brain`
+- **Entrypoint**: `docker-entrypoint.sh` roda `generate.mjs` antes do server no boot — o grafo sempre reflite o `projects/manifest.json` real do volume (dist/data.js do build pode estar defasado)
 
 ## Como atualizar
 
@@ -37,9 +39,28 @@ O clone tem 3 commits locais de deploy que NÃO existem na main do GitHub
 
 ## API (resumo)
 
-- Reads abertos (CORS `*`): `/api/health`, `/api/graph`, `/api/nodes/:id`, `/api/search?q=`, `/api/clusters`, `/api/timeline`, `/api/synapse/status`
-- Writes exigem `Authorization: Bearer $BRAIN_API_TOKEN`: `POST /api/learning/outcomes`, `POST /api/memory/notes`, `POST /api/regenerate`
+- Reads abertos (CORS `*`): `/api/health`, `/api/graph`, `/api/nodes/*`, `/api/search?q=`, `/api/clusters`, `/api/timeline`, `/api/synapse/status`, `/api/projects/registered`
+- Writes exigem `Authorization: Bearer $BRAIN_API_TOKEN`: `POST /api/learning/outcomes`, `POST /api/memory/notes`, `POST /api/regenerate`, `POST /api/projects/register`, `DELETE /api/projects/:id`
 - Front: hash routing (`/brain/#/graph`, `#/fluxo`, `#/timeline`) — tudo servido pelo mesmo index.html
+
+## Instalar o Brain num projeto (install.sh)
+
+Qualquer repo git vira um projeto com Brain em ~10 segundos:
+
+```bash
+curl -s https://raw.githubusercontent.com/Jhin1v9/principal-brain/main/install.sh | bash
+# ou com identidade e registro de uma vez:
+curl -s .../install.sh | bash -s -- --nome "HDM Industrial" --cliente Matheus --register
+```
+
+O instalador (idempotente — re-rodar nunca quebra nem sobrescreve):
+
+1. copia o esqueleto `.brain/` (regras, personalidades, BLS, MAMIS) + a skill `.kimi-code/skills/nexo-workflow/`
+2. cria `.brain/project.json` (id, nome, cliente, status, stack, grupo, resumo)
+3. com `--register` (ou `BRAIN_API_TOKEN` no ambiente): envia o project.json + `.brain/relatorio.md` para `POST /api/projects/register` — o projeto **vira bolinha no grafo em segundos, sem rebuild**
+4. `--check` só diagnostica o que falta; `--yes` não pergunta nada
+
+Depois, a cada entrega relevante: atualize `.brain/relatorio.md` e rode `bash .brain/install.sh --register` (ou o POST direto) para o painel do projeto no grafo acompanhar o projeto.
 
 ## Auto-sync (agente)
 
