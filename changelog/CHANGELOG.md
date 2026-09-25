@@ -1,5 +1,6 @@
 # Changelog — SYNAPSE
 
+- **2026-09-25 · `155d347` · fix** — fix(atlas): aba Universo visivel — 'universo' entrava no VIEWS/TABS/View type (commit 325fd69 so adicionou o comando de palheta e o bloco de render) ([análise](entries/2026-09-25-155d347.md))
 - **2026-09-25 · `0f7c984` · fix** — fix(atlas): import Sparkles no App.tsx — quebrava todo o render (tela azul) e reaplica POST /api/synapses/record perdido no pull ([análise](entries/2026-09-25-0f7c984.md))
 - **2026-09-14 · `13640bb` · feat** — feat(atlas): Atlas 2.0 — React 18 + TS + Vite + Tailwind 4, lucide icons (zero emoji), framer-motion, command palette, API HTTP (Fastify) e servidor MCP (7 tools) para IAs operarem o brain ([análise](entries/2026-09-14-13640bb.md))
 - **2026-09-14 · `a851ba5` · fix** — fix(atlas): layout mobile em flexbox (sem área morta), ResizeObserver no body, deg default 0 (search sem undefined) ([análise](entries/2026-09-14-a851ba5.md))
