@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Clock, Crosshair, Dices, FolderKanban, GitCommitHorizontal, Network, RefreshCw, Workflow,
+  Clock, Crosshair, Dices, FolderKanban, GitCommitHorizontal, Network, RefreshCw, Sparkles, Workflow,
 } from 'lucide-react';
 import { buildIndex, loadAtlasData, metaLine } from './data';
 import type { GraphEngine } from './graph/engine';

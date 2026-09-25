@@ -5,9 +5,15 @@
 //   node atlas/server.mjs        (rode da raiz do repo ou de atlas/)
 //
 // Reads (CORS *):  /api/health /api/graph /api/nodes/:id /api/search /api/clusters /api/timeline /api/synapse/status /api/projects/registered
-// Writes (Bearer): POST /api/learning/outcomes  POST /api/memory/notes  POST /api/regenerate
+// Writes (Bearer): POST /api/learning/outcomes  POST /api/memory/notes  POST /api/regenerate  POST /api/synapses/record
 //                  POST /api/projects/register  DELETE /api/projects/:id
 // Writes exigem o env BRAIN_API_TOKEN; sem ele configurado → 503, token errado → 401.
+//
+// POST /api/synapses/record  { client, body, service?, kind? }
+//   Registra pedido/comentário de cliente em clients/<slug>.md (cria a ficha se
+//   não existir). Cada registro referencia o serviço por wikilink ([[<service>]]),
+//   virando aresta CLIENTE↔serviço no grafo após regenerate. kind: pedido (padrão)
+//   | comentario | status. Resposta: { ok, path, created }.
 
 import Fastify from 'fastify';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
@@ -149,6 +155,42 @@ app.post('/api/memory/notes', async (req, reply) => {
   const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
   writeFileSync(file, `${existing.replace(/\s*$/, '\n')}\n## ${title} — ${stamp}\n\n${body}\n`, 'utf8');
   return { ok: true, path: 'memory/notes.md' };
+});
+
+app.post('/api/synapses/record', async (req, reply) => {
+  if (!checkAuth(req, reply)) return;
+  const { client, body, service, kind } = req.body || {};
+  const kindOk = ['pedido', 'comentario', 'status'].includes(kind || 'pedido');
+  if (!client || !body) return reply.code(400).send({ error: 'client e body são obrigatórios' });
+  if (!kindOk) return reply.code(400).send({ error: 'kind deve ser pedido, comentario ou status' });
+  const slug = slugify(client);
+  const rel = join('clients', `${slug}.md`);
+  const abs = join(REPO_ROOT, rel);
+  if (!resolve(abs).startsWith(resolve(REPO_ROOT))) return reply.code(400).send({ error: 'caminho inválido' });
+  mkdirSync(join(REPO_ROOT, 'clients'), { recursive: true });
+
+  const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const svc = service ? String(service).trim() : null;
+  let created = false;
+  let existing = '';
+  try { existing = readFileSync(abs, 'utf8'); } catch { created = true; }
+  if (!existing) {
+    existing = [
+      '---', `client: ${String(client).trim()}`, 'tags: [cliente]', '---', '',
+      `# ${String(client).trim()}`, '',
+      '> Ficha alimentada pela Luna via POST /api/synapses/record. Cada registro abaixo referencia o serviço por wikilink — vira aresta no Atlas após regenerate.', '',
+    ].join('\n');
+  }
+  const entry = [
+    `## ${stamp} — ${kind || 'pedido'}`,
+    '',
+    svc ? `Serviço: [[${svc}]]` : 'Serviço: (não informado)',
+    '',
+    String(body),
+    '',
+  ].join('\n');
+  writeFileSync(abs, `${existing.replace(/\s*$/, '\n')}\n${entry}`, 'utf8');
+  return { ok: true, path: rel.replace(/\\/g, '/'), created };
 });
 
 app.post('/api/regenerate', async (_req, reply) => {
