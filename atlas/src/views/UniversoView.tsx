@@ -58,39 +58,110 @@ export function UniversoView({ active, onOpenNode }: { active: boolean; onOpenNo
     const holder = holderRef.current;
     const graph = ForceGraph3D()(holder)
       .backgroundColor('#00000000')
-      .nodeRelSize(6)
-      .nodeOpacity(1)
-      .linkOpacity(0.16)
-      .linkWidth(0.4)
-      .linkDirectionalParticles(0)
       .showNavInfo(false);
 
-    // sprite com glow radial por nó
-    const spriteCache = new Map<string, HTMLCanvasElement>();
-    const glowSprite = (color: string, size = 64) => {
-      const key = color + size;
-      let cv = spriteCache.get(key);
+    /* ---------- sprites: glow + núcleo + rótulo ---------- */
+
+    // glow radial (cache do canvas por cor)
+    const glowCache = new Map<string, HTMLCanvasElement>();
+    const glowTexture = (color: string) => {
+      let cv = glowCache.get(color);
       if (!cv) {
         cv = document.createElement('canvas');
-        cv.width = cv.height = size * 2;
+        cv.width = cv.height = 128;
         const c = cv.getContext('2d')!;
-        const g = c.createRadialGradient(size, size, 0, size, size, size);
+        const g = c.createRadialGradient(64, 64, 0, 64, 64, 64);
         g.addColorStop(0, '#ffffff');
-        g.addColorStop(0.25, color);
+        g.addColorStop(0.18, '#ffffff');
+        g.addColorStop(0.4, color);
         g.addColorStop(1, '#00000000');
         c.fillStyle = g;
-        c.fillRect(0, 0, size * 2, size * 2);
-        spriteCache.set(key, cv);
+        c.fillRect(0, 0, 128, 128);
+        glowCache.set(color, cv);
       }
       const tex = new THREE.Texture(cv);
       tex.needsUpdate = true;
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: 2 });
-      const sp = new THREE.Sprite(mat);
-      sp.scale.set(14, 14, 1);
-      return sp;
+      return tex;
     };
 
-    // mesma fonte do Grafo 2D: window.ATLAS_DATA (data.js), sem depender da API autenticada
+    // núcleo branco incandescente — faz a estrela "queimar" no centro
+    const coreTexture = (() => {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = 32;
+      const c = cv.getContext('2d')!;
+      const g = c.createRadialGradient(16, 16, 0, 16, 16, 16);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.6, 'rgba(255,255,255,0.85)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, 32, 32);
+      const tex = new THREE.Texture(cv);
+      tex.needsUpdate = true;
+      return tex;
+    })();
+
+    // rótulo com o título do documento (cache da textura por nome+cor)
+    const labelCache = new Map<string, THREE.Texture>();
+    const labelTexture = (name: string, color: string) => {
+      const key = name + '|' + color;
+      let tex = labelCache.get(key);
+      if (!tex) {
+        const font = '600 26px "Space Grotesk", "Segoe UI", sans-serif';
+        const meas = document.createElement('canvas').getContext('2d')!;
+        meas.font = font;
+        const tw = Math.ceil(meas.measureText(name).width);
+        const cv = document.createElement('canvas');
+        cv.width = tw + 24;
+        cv.height = 44;
+        const c = cv.getContext('2d')!;
+        c.font = font;
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(2,6,18,0.95)';
+        c.shadowBlur = 10;
+        c.fillStyle = '#eef2ff';
+        c.fillText(name, 12, 24);
+        // filetinho na cor do cluster embaixo do texto
+        c.shadowBlur = 0;
+        c.fillStyle = color;
+        c.globalAlpha = 0.85;
+        c.fillRect(12, 38, tw, 3);
+        tex = new THREE.Texture(cv);
+        tex.needsUpdate = true;
+        labelCache.set(key, tex);
+      }
+      return tex;
+    };
+
+    // estrela completa = glow colorido + núcleo branco + rótulo flutuando
+    const starObject = (node: { name?: string; color?: string; val?: number }) => {
+      const group = new THREE.Group();
+      const color = node.color || '#94a3b8';
+      const size = 10 + (node.val || 1) * 3.2;
+
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTexture(color), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      glow.scale.set(size, size, 1);
+      group.add(glow);
+
+      const core = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: coreTexture, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      core.scale.set(size * 0.38, size * 0.38, 1);
+      group.add(core);
+
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: labelTexture(node.name ?? '', color), transparent: true, depthWrite: false,
+        opacity: Math.min(1, 0.5 + (node.val || 1) * 0.07),
+      }));
+      const h = 3.6 + size * 0.17; // rótulo cresce pouco — evita poluir o centro
+      label.scale.set(h * ((label.material.map!.image as HTMLCanvasElement).width / (label.material.map!.image as HTMLCanvasElement).height), h, 1);
+      label.position.y = size * 0.5 + h * 0.5 + 1.5;
+      group.add(label);
+      return group;
+    };
+
+    /* ---------- dados (mesma fonte do Grafo 2D) ---------- */
     const data = loadAtlasData();
     const degree = new Map<string, number>();
     for (const e of data.edges) {
@@ -103,20 +174,30 @@ export function UniversoView({ active, onOpenNode }: { active: boolean; onOpenNo
           id: n.id,
           name: n.title,
           color: clusterColor(n.cluster),
-          val: 1 + Math.min(6, (degree.get(n.id) || 0) * 0.4),
+          val: 1 + Math.min(7, (degree.get(n.id) || 0) * 0.45),
           raw: n,
         })),
         links: data.edges.map((e) => ({ source: e.source, target: e.target })),
       })
-      .nodeThreeObject((node: { color?: string }) => glowSprite(node.color || '#94a3b8'))
+      /* conexões visíveis de verdade: mais grossas, curvadas, com pulso de partículas */
+      .linkColor(() => '#7f9cf6')
+      .linkOpacity(0.42)
+      .linkWidth(0.9)
+      .linkCurvature(0.06)
+      .linkDirectionalParticles(1)
+      .linkDirectionalParticleWidth(2.2)
+      .linkDirectionalParticleSpeed(0.004)
+      .linkDirectionalParticleColor(() => '#dbe4ff')
+      .nodeThreeObject(starObject)
       .nodeLabel((n: { name?: string; raw?: AtlasNode }) =>
         `${n.name ?? ''}\n${n.raw?.cluster ?? ''}${n.raw?.summary ? '\n' + n.raw.summary.slice(0, 120) : ''}`)
+      .onNodeHover((node: unknown) => { holder.style.cursor = node ? 'pointer' : 'grab'; })
       .onNodeClick((n: { raw?: AtlasNode }) => {
         if (n.raw) onOpenNode(n.raw.id);
       });
-    graph.d3Force('charge')?.strength?.(-160);
-    graph.d3Force('link')?.distance?.(42);
-    graph.cameraPosition({ x: 0, y: 0, z: 420 });
+    graph.d3Force('charge')?.strength?.(-150);
+    graph.d3Force('link')?.distance?.(55);
+    graph.cameraPosition({ x: 0, y: 0, z: 640 });
 
     return () => { holder.innerHTML = ''; };
   }, [active, onOpenNode]);
