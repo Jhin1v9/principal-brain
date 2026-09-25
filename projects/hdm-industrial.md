@@ -1,3 +1,6 @@
+---
+tipo: cliente
+---
 ## Relatório — HDM Industrial (Matheus)
 
 **O que é.** Site institucional da HDM Industrial, publicado no Vercel a partir do repo público no GitHub.

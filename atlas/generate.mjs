@@ -15,6 +15,7 @@ const CLUSTER_OF = [
   [/\.brain[\\/]/, 'Núcleo'],
   [/^personalities[\\/]/, 'Personalidades'],
   [/^personas[\\/]/, 'Personas'],
+  [/^luna[\\/]clients[\\/]/, 'Clientes'],
   [/^runbooks[\\/]/, 'Runbooks'],
   [/^knowledge[\\/]/, 'Conhecimento'],
   [/^memory[\\/]/, 'Memória'],
@@ -142,7 +143,7 @@ for (const rel of files) {
   const node = {
     id: rel,
     title: (short && changelogSubjects.get(short)) || cleanTitle(title).slice(0, 120) || basename(rel),
-    cluster: clusterOf(rel),
+    cluster: fmValue(fm, 'tipo') === 'cliente' ? 'Clientes' : clusterOf(rel),
     date: firstDate(basename(rel), fm),
     tipo: fmValue(fm, 'tipo'),
     escopo: fmValue(fm, 'escopo'),
@@ -346,7 +347,7 @@ for (const n of nodes) {
 // ---------- saída ----------
 const data = {
   generatedAt: new Date().toISOString(),
-  clusters: ['Núcleo', 'Personalidades', 'Personas', 'Runbooks', 'Conhecimento', 'Memória', 'Aprendizado', 'Automação SYNAPSE', 'Changelog', 'Relatórios', 'Projetos'],
+  clusters: ['Núcleo', 'Personalidades', 'Personas', 'Runbooks', 'Conhecimento', 'Memória', 'Aprendizado', 'Automação SYNAPSE', 'Changelog', 'Relatórios', 'Projetos', 'Clientes'],
   nodes, edges,
 };
 

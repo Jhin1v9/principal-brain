@@ -1,3 +1,6 @@
+---
+tipo: cliente
+---
 ## Relatório — JR Reformas (Juninho)
 
 **O que é.** Site do Juninho (reformas), no ar no Vercel.
