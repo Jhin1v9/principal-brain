@@ -7,4 +7,4 @@ Fonte: painel (org HDM) + respostas oficiais do Matheus (24/09). Feitos ✓ / Em
 - ✓ Scroll reveal (COMPLETED 2026-09).
 - ○ Logo final — PDF pendente (Matheus vai reenviar); aplicar quando chegar.
 - ○ Fotos próprias da equipe — quando enviarem, trocam as licenciadas.
-Cliente: [[clientes/hdm-industrial/CLIENTE.md]] · data + autor: Luna · 2026-09-25
+Cliente: [[luna/clientes/hdm-industrial/CLIENTE.md]] · data + autor: Luna · 2026-09-25

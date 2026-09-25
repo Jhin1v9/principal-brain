@@ -5,4 +5,4 @@ Fonte: painel Nexo Workspace (org Ona Dance). Feitos ✓ / Em aberto ○:
 - ○ Trustpilot wp-admin (CLIENT_REVIEWING) — explicar aviso do plugin brtpmj-free; ela teme estragar configs.
 - ○ "Avísame cuando vuelga" em produtos esgotados (CLIENT_REVIEWING) — captura de email + notificação.
 - ✓ Criar novo cupom (COMPLETED).
-Cliente: [[clientes/jess-onadance/CLIENTE.md]] · data + autor: Luna · 2026-09-25
+Cliente: [[luna/clientes/jess-onadance/CLIENTE.md]] · data + autor: Luna · 2026-09-25
