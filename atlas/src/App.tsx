@@ -12,6 +12,7 @@ import { CommandPalette } from './components/CommandPalette';
 import type { PaletteAction } from './components/CommandPalette';
 import { GraphView } from './views/GraphView';
 import { FluxoView } from './views/FluxoView';
+import { UniversoView } from './views/UniversoView';
 import { TimelineView } from './views/TimelineView';
 import { ProjetosView } from './views/ProjetosView';
 
@@ -115,6 +116,7 @@ export default function App() {
 
   const actions: PaletteAction[] = useMemo(() => [
     { id: 'go-graph', label: 'Ir para: Grafo', hint: 'Visão', icon: <Network size={15} />, keywords: 'grafo graph', run: () => switchView('graph') },
+    { id: 'go-universo', label: 'Ir para: Universo', hint: 'Visão', icon: <Sparkles size={15} />, keywords: 'universo 3d estrelas cosmos', run: () => switchView('universo') },
     { id: 'go-fluxo', label: 'Ir para: Fluxo SYNAPSE', hint: 'Visão', icon: <Workflow size={15} />, keywords: 'fluxo synapse pipeline', run: () => switchView('fluxo') },
     { id: 'go-timeline', label: 'Ir para: Linha do tempo', hint: 'Visão', icon: <Clock size={15} />, keywords: 'timeline changelog histórico', run: () => switchView('timeline') },
     { id: 'go-projetos', label: 'Ir para: Projetos', hint: 'Visão', icon: <FolderKanban size={15} />, keywords: 'projetos clientes portfólio relatórios', run: () => switchView('projetos') },
@@ -161,6 +163,11 @@ export default function App() {
             engineRef={engineRef}
           />
           <AnimatePresence mode="wait">
+            {view === 'universo' && (
+              <motion.div key="universo" className="view" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.22 }}>
+                <UniversoView active onOpenNode={openNode} />
+              </motion.div>
+            )}
             {view === 'fluxo' && (
               <motion.div
                 key="fluxo"
