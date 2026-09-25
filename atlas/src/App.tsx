@@ -16,7 +16,7 @@ import { UniversoView } from './views/UniversoView';
 import { TimelineView } from './views/TimelineView';
 import { ProjetosView } from './views/ProjetosView';
 
-const VIEWS: View[] = ['graph', 'fluxo', 'timeline', 'projetos'];
+const VIEWS: View[] = ['graph', 'universo', 'fluxo', 'timeline', 'projetos'];
 
 function viewFromHash(): View {
   const v = location.hash.replace('#/', '').split('?')[0];

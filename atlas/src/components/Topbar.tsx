@@ -1,12 +1,13 @@
-import { Crosshair, FolderKanban, GitCommitHorizontal, Network, Pause, Play, Workflow } from 'lucide-react';
+import { Crosshair, FolderKanban, GitCommitHorizontal, Network, Pause, Play, Sparkles, Workflow } from 'lucide-react';
 import type { AtlasIndex } from '../data';
 import { SearchBox } from './SearchBox';
 import { useCanScroll } from './useCanScroll';
 
-export type View = 'graph' | 'fluxo' | 'timeline' | 'projetos';
+export type View = 'graph' | 'universo' | 'fluxo' | 'timeline' | 'projetos';
 
 const TABS: { key: View; label: string; icon: typeof Network }[] = [
   { key: 'graph', label: 'Grafo', icon: Network },
+  { key: 'universo', label: 'Universo', icon: Sparkles },
   { key: 'fluxo', label: 'Fluxo SYNAPSE', icon: Workflow },
   { key: 'timeline', label: 'Linha do tempo', icon: GitCommitHorizontal },
   { key: 'projetos', label: 'Projetos', icon: FolderKanban },
