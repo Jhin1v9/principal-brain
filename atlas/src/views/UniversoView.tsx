@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import ForceGraph3D from 'force-graph';
+import ForceGraph3D from '3d-force-graph';
 import * as THREE from 'three';
-import { clusterColor, type AtlasNode } from '../data';
+import { clusterColor, loadAtlasData, type AtlasNode } from '../data';
 
 /**
  * Universo — visão 3D do brain (decreto owner 2026-09-25: "parecer mais um
@@ -90,42 +90,39 @@ export function UniversoView({ active, onOpenNode }: { active: boolean; onOpenNo
       return sp;
     };
 
-    fetch('/api/graph')
-      .then((r) => r.json())
-      .then((g: { nodes: AtlasNode[]; edges: Array<{ source: string; target: string }> }) => {
-        const degree = new Map<string, number>();
-        for (const e of g.edges) {
-          degree.set(e.source, (degree.get(e.source) || 0) + 1);
-          degree.set(e.target, (degree.get(e.target) || 0) + 1);
-        }
-        graph
-          .graphData({
-            nodes: g.nodes.map((n) => ({
-              id: n.id,
-              name: n.title,
-              color: clusterColor(n.cluster),
-              val: 1 + Math.min(6, (degree.get(n.id) || 0) * 0.4),
-              raw: n,
-            })),
-            links: g.edges.map((e) => ({ source: e.source, target: e.target })),
-          })
-          .nodeThreeObject((node: { color?: string }) => glowSprite(node.color || '#94a3b8'))
-          .nodeLabel((n: { name?: string; raw?: AtlasNode }) =>
-            `${n.name ?? ''}\n${n.raw?.cluster ?? ''}${n.raw?.summary ? '\n' + n.raw.summary.slice(0, 120) : ''}`)
-          .onNodeClick((n: { raw?: AtlasNode }) => {
-            if (n.raw) onOpenNode(n.raw.id);
-          });
-        graph.d3Force('charge')?.strength?.(-160);
-        graph.d3Force('link')?.distance?.(42);
-        graph.cameraPosition({ x: 0, y: 0, z: 420 });
+    // mesma fonte do Grafo 2D: window.ATLAS_DATA (data.js), sem depender da API autenticada
+    const data = loadAtlasData();
+    const degree = new Map<string, number>();
+    for (const e of data.edges) {
+      degree.set(e.source, (degree.get(e.source) || 0) + 1);
+      degree.set(e.target, (degree.get(e.target) || 0) + 1);
+    }
+    graph
+      .graphData({
+        nodes: data.nodes.map((n) => ({
+          id: n.id,
+          name: n.title,
+          color: clusterColor(n.cluster),
+          val: 1 + Math.min(6, (degree.get(n.id) || 0) * 0.4),
+          raw: n,
+        })),
+        links: data.edges.map((e) => ({ source: e.source, target: e.target })),
       })
-      .catch(() => undefined);
+      .nodeThreeObject((node: { color?: string }) => glowSprite(node.color || '#94a3b8'))
+      .nodeLabel((n: { name?: string; raw?: AtlasNode }) =>
+        `${n.name ?? ''}\n${n.raw?.cluster ?? ''}${n.raw?.summary ? '\n' + n.raw.summary.slice(0, 120) : ''}`)
+      .onNodeClick((n: { raw?: AtlasNode }) => {
+        if (n.raw) onOpenNode(n.raw.id);
+      });
+    graph.d3Force('charge')?.strength?.(-160);
+    graph.d3Force('link')?.distance?.(42);
+    graph.cameraPosition({ x: 0, y: 0, z: 420 });
 
     return () => { holder.innerHTML = ''; };
   }, [active, onOpenNode]);
 
   return (
-    <div className="view" style={{ position: 'relative', overflow: 'hidden', background: '#04060f' }}>
+    <div className="view" style={{ overflow: 'hidden', background: '#04060f' }}>
       <canvas ref={starsRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
       <div ref={holderRef} style={{ position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', left: 14, top: 12, pointerEvents: 'none', color: '#8ea0c9', font: '11px ui-monospace, monospace', letterSpacing: '0.18em' }}>
