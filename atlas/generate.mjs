@@ -15,7 +15,7 @@ const CLUSTER_OF = [
   [/\.brain[\\/]/, 'Núcleo'],
   [/^personalities[\\/]/, 'Personalidades'],
   [/^personas[\\/]/, 'Personas'],
-  [/^luna[\\/]clients[\\/]/, 'Clientes'],
+  [/^luna[\\/]clientes[\\/]/, 'Clientes'],
   [/^runbooks[\\/]/, 'Runbooks'],
   [/^knowledge[\\/]/, 'Conhecimento'],
   [/^memory[\\/]/, 'Memória'],
