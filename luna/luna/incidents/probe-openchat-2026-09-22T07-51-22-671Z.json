@@ -1,0 +1,187 @@
+[
+  {
+    "connected": {
+      "url": "https://web.whatsapp.com/"
+    }
+  },
+  {
+    "initial-title": null
+  },
+  {
+    "list-titles": [
+      {
+        "title": "Meu Amorzinho 💖🌻",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "🏆Production - 2026🙏🏻",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪@luna que que vc tá falando?‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Valência 18/10/26",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪Foto‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Irmã Dora Espanha",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪Bom dia pra nos‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Abner Filhao Novo",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪@luna até agora não recebi nenhuma resposta‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Mauro España",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪Eliminaste este mensaje.‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Recitativo Jóvenes",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪~ Pedro les envió a ~ Jonathan y 2 más el historial de mensajes que comienza el 15 ago 2026, 16:38.‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Churras domingo",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪Video‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      },
+      {
+        "title": "Cinemaaaaaaa",
+        "tag": "SPAN",
+        "role": null,
+        "testid": null,
+        "cls": "x1iyjqo2 x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1rg5ohu "
+      },
+      {
+        "title": "‪Foto‬",
+        "tag": "SPAN",
+        "role": null,
+        "testid": "last-msg-status",
+        "cls": "x78zum5 x1cy8zhl"
+      }
+    ]
+  },
+  {
+    "selector-counts": {
+      "row": 9,
+      "listitem": 0,
+      "cellFrame": 8,
+      "chatListSearch": 0,
+      "textbox": 1
+    }
+  },
+  {
+    "step1-exact-row": {
+      "selector": "#pane-side [role=\"row\"]:has([title=\"🏆Production - 2026🙏🏻\"]), #pane-side [data-testid=\"cell-frame-container\"]:has([title=\"🏆Production - 2026🙏🏻\"])",
+      "count": 1
+    }
+  },
+  {
+    "step1-click": {
+      "clicked": true
+    }
+  },
+  {
+    "step1-title-after": {
+      "src": "testid",
+      "text": "Production - 2026",
+      "titleAttr": null
+    }
+  },
+  {
+    "search-count": 1
+  },
+  {
+    "search-field-value": ""
+  },
+  {
+    "result-counts": {
+      "#pane-side [data-testid=\"cell-frame-container\"]:has([title=\"🏆Production - 2026🙏🏻\"])": 1,
+      "#pane-side [role=\"row\"]:has([title=\"🏆Production - 2026🙏🏻\"])": 4,
+      "#pane-side [role=\"listitem\"] [title*=\"🏆Production\"]": 0,
+      "#pane-side [title*=\"🏆Production\"]": 7
+    }
+  },
+  {
+    "result-click": {
+      "selector": "#pane-side [data-testid=\"cell-frame-container\"]:has([title=\"🏆Production - 2026🙏🏻\"])",
+      "result": true
+    }
+  },
+  {
+    "title-after-result-click": {
+      "src": "testid",
+      "text": "Production - 2026",
+      "titleAttr": null
+    }
+  }
+]

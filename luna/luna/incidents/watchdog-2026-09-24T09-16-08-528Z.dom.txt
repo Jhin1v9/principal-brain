@@ -1,0 +1,19 @@
+body: <meta http-equiv="refresh" content="0; URL=/?_fb_noscript=1" />WhatsApp Cifrado 
+  noscript: <meta http-equiv="refresh" content="0; URL=/?_fb_noscript=1" />
+  div: WhatsApp Cifrado de extremo a extremo
+    div: WhatsApp
+    div: Cifrado de extremo a extremo
+  script: {"require":[["qplTimingsServerJS",null,null,["7689028133369174595","splash_scree
+  script: {"require":[["maybeDisableAnimations",null,null,[]]]}
+  script: {"require":[["replaceNativeTimer",null,null,[]]]}
+  script: {"require":[["bootstrapWebSession",null,null,[1790241369]]]}
+  script: {"require":[["qplTagServerJS",null,null,[["comet_aa_coinflip:true","should_use_b
+  script: {"require":[["qplTimingsServerJS",null,null,["7689028133369174595","tierOne"]]]}
+  script: {"require":[["JSScheduler","makeSchedulerGlobalEntry",null,["null",false,false]]
+  script: {"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"define":[["cr:310",[
+  script: {"require":[["qplTimingsServerJS",null,null,["7689028133369174595","tierOneEnd"]
+  script: {"require":[["qplTimingsServerJS",null,null,["7689028133369174595","tierTwo"]]]}
+  script: {"require":[["HasteSupportData","handle",null,[{"bxData":{"9547":{"uri":"https:\
+  script: {"require":[["Bootloader","handlePayload",null,[{"consistency":{"rev":1048347649
+  script: {"require":[["ScheduledServerJS","handle",null,[{"__bbox":{"define":[["cr:254",[
+  script: {"require":[["qplTimingsServerJS",null,null,["7689028133369174595","tierTwoEnd"]

@@ -1,0 +1,57 @@
+[
+  {
+    "after_ms": 5000,
+    "sample": {
+      "probes": {
+        "paneSide": 1,
+        "chatListTestId": 1,
+        "chatListRoleGrid": 1,
+        "landingWrapper": 0,
+        "landingMain": 0,
+        "qrTestId": 0,
+        "qrRef": 0,
+        "canvasTotal": 0,
+        "canvasInLanding": 0,
+        "chatItemTestId": 21,
+        "chatRowRole": 20,
+        "headerChatTitle": 0,
+        "msgContainer": 0,
+        "composeBox": 0,
+        "sideHeader": 0
+      },
+      "panePresent": true,
+      "ariaLabels": [
+        "Chats",
+        "Estados",
+        "Canales",
+        "Comunidades",
+        "Contenido multimedia",
+        "Ajustes",
+        "Perfil",
+        "WhatsApp",
+        "Menú",
+        "Nuevo chat",
+        "Buscar un chat o iniciar uno nuevo",
+        "chat-list-filters",
+        "Nueva lista",
+        "Archivados ",
+        "Lista de chats"
+      ],
+      "titles": [
+        "Meu Amorzinho 💖🌻",
+        "‪Sticker‬",
+        "🏆Production - 2026🙏🏻",
+        "‪0:21‬",
+        "Notícias Déia 🙏🏼🩷✨",
+        "‪Sticker‬",
+        "Pai",
+        "‪https://share.google/JyvQDgqgJSGSN5myA‬",
+        "Susu Filhinha",
+        "‪bora uai‬"
+      ],
+      "bodySnippet": "29\nTodos\nNo leídos\n31\nFavoritos\nGrupos\n16\nArchivados\nMeu Amorzinho \n16:08\nSticker\nProduction - 2026\n17:14\nNonoke\n: \n0:21\n168 mensajes no leídos\nNotícias Déia \n18:07\nDéia Sednem \n: \nSticker\n168\nPai\n18:06\nhttps://share.google/JyvQDgqgJSGSN5myA\n2 mensajes no leídos\nSusu Filhinha\n16:40\nbora uai\n2\n2 mensajes no leídos\nValência 18/10/26\n18:43\nSe produjo un cambio en los miembros del grupo. Haz clic para",
+      "url": "https://web.whatsapp.com/",
+      "readyState": "complete"
+    }
+  }
+]
