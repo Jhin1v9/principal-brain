@@ -41,3 +41,12 @@ Regras operacionais, procedimentos e decisões. Append-only, assinado `data + au
 - Acesso `hdm-industrial@nexo-digital.app` JÁ existia em `data/users.json` (slug hdm) — confirmado, não precisei criar.
 - Método: `ssh vps` (Tailscale) — skill `vps-tailscale` registrada. Fim da "ação humana" pra editar relatório.
 - autor: Luna
+
+## 2026-09-26 · Jess criada no portal (Kimi Code)
+| Cliente | E-mail de acesso | Relatório | Estado |
+|---|---|---|---|
+| Ona Dance (Jess) | onadance@app · info@onadance.com | /relatorios/clientes/onadance/ | ✅ card na home + relatório completo (login validado: 303 → 200) |
+
+- Correção do perfil: Ona Dance é marca de roupa de pole dance sustentável (Barcelona), NÃO escola de dança/música — corrigido em luna/clientes/jess-onadance/CLIENTE.md, luna/contatos-pessoais/jess-onadance/FICHA.md e reports/clients/jess-onadance/FICHA.md.
+- Arquivos na VPS: relatorios/data/users.json (aliases onadance@app + info@onadance.com → slug onadance), public/index.html (card), public/clientes/onadance/index.html (relatório). Sem commit no repo da VPS (misturado com outras mudanças locais).
+- autor: Kimi Code

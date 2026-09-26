@@ -5,7 +5,7 @@
 > + e-mail onadance@nexo-digital.app. Atualizada por Luna em 2026-09-24.
 
 ## Perfil
-- Empresa: Ona Dance (escola/dança — site onadance.com, staging pre2.onadance.com)
+- Empresa: Ona Dance (marca de roupa de pole dance sustentável — site onadance.com, staging pre2.onadance.com)
 - Contato: Jess (decisora; escreve em PT/ES misturado)
 - Email cadastrado no workspace: onadance@nexo-digital.app
 - Tratamento: profissional e simpático; ela quer falar com gente (já pediu
