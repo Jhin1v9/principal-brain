@@ -14,3 +14,6 @@ services:
       # projetos registrados via API vivam no host: persistem rebuilds,
       # são versionados no git e aparecem no grafo sem rebuild de imagem
       - /opt/nexo-brain/projects:/app/projects
+      # fichas de clientes alimentadas via POST /api/synapses/record: persistem
+      # rebuilds e ficam versionadas no git (mesma ideia dos projects)
+      - /opt/nexo-brain/clients:/app/clients

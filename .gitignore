@@ -1,3 +1,4 @@
 # NEXO BRAIN — Atlas (React + Vite)
 atlas/node_modules/
 atlas/dist/
+.env
